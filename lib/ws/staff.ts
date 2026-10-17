@@ -60,3 +60,19 @@ export async function authedPost<T>(url: string, body?: unknown): Promise<T> {
 
 export const inviteStaff = (input: { email: string; role: Exclude<StaffRole, 'owner'>; full_name?: string }): Promise<{ user_id: string }> =>
   authedPost<{ user_id: string }>('/api/staff/invite', input);
+
+// ── P3: platform staff management (ws_add_staff is admin-only, owner is granted via SQL) ──
+export type GrantableRole = Exclude<StaffRole, 'owner'>;
+
+/** Adds (or re-activates) staff for an existing auth account. Throws P0002 when the email has no account. */
+export async function addExistingStaff(email: string, role: GrantableRole, fullName?: string): Promise<string> {
+  const { data, error } = await sb.rpc('ws_add_staff', {
+    p_email: email.trim(), p_role: role, p_full_name: fullName?.trim() || null,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export const updateStaffRole = (userId: string, role: StaffRole): Promise<WsStaff> => updateStaff(userId, { role });
+
+export const setStaffActive = (userId: string, active: boolean): Promise<WsStaff> => updateStaff(userId, { active });
