@@ -11,7 +11,7 @@ import { authStore, logout } from '@/lib/auth';
 import { visibleNavItems, isActive, type NavId } from '@/lib/nav';
 import { roleLabel } from '@/lib/shell-access';
 import { useStore } from '@/lib/store';
-import { shellAuthStore } from './AuthGate';
+import { wsAuthStore } from '@/lib/ws/staff';
 
 const NAV_ICONS: Record<NavId, IconSvgElement> = {
   dashboard: DashboardSquare01Icon,
@@ -27,7 +27,7 @@ const NAV_ICONS: Record<NavId, IconSvgElement> = {
 function Sidebar() {
   const pathname = usePathname();
   const { user } = useStore(authStore);
-  const { whoami } = useStore(shellAuthStore);
+  const { whoami } = useStore(wsAuthStore);
   const role = whoami?.staff?.role ?? null;
   const email = user?.email ?? '';
 

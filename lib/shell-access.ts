@@ -1,11 +1,7 @@
-export type StaffRole = 'owner' | 'admin' | 'instructor' | 'guest';
+import type { StaffRole, Whoami } from './ws/types';
 
-export interface Whoami {
-  readonly user_id: string;
-  readonly staff: { readonly role: StaffRole; readonly full_name: string } | null;
-  readonly workshops: readonly { readonly workshop_id: string; readonly role: string }[];
-  readonly participations: readonly unknown[];
-}
+// The canonical types live in lib/ws/types; re-exported so nav.ts and tests keep one import site.
+export type { StaffRole, Whoami };
 
 const ROLE_LABELS: Readonly<Record<StaffRole, string>> = {
   owner: 'בעלים',

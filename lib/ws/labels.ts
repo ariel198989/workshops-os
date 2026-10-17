@@ -1,6 +1,6 @@
 import type {
   AttendanceStatus, CertificateStatus, DeliverableStatus, GroupStatus, ModuleRunStatus, OrgStatus,
-  ParticipantStatus, ProblemStatus, SessionStatus, WorkshopStatus,
+  ParticipantStatus, ProblemStatus, SessionStatus, StaffRole, WorkshopStatus,
 } from './types';
 
 export const PILL_TONES = ['gray', 'blue', 'teal', 'green', 'navy', 'outline', 'red', 'amber'] as const;
@@ -66,3 +66,9 @@ function entry(kind: PillKind, value: string): PillEntry | undefined {
 export const labelOf = (kind: PillKind, value: string): string => entry(kind, value)?.label ?? value;
 
 export const pillTone = (kind: PillKind, value: string): PillTone => entry(kind, value)?.tone ?? 'gray';
+
+// Platform staff roles are not a lifecycle status, so they live outside PILL_MAPS
+// (which ws-pure.test.ts pins to the status unions).
+export const STAFF_ROLE_PILLS: Record<StaffRole, PillEntry> = {
+  owner: e('בעלים', 'navy'), admin: e('מנהל', 'teal'), instructor: e('מדריך', 'blue'), guest: e('אורח', 'outline'),
+};

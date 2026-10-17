@@ -1,30 +1,10 @@
 'use client';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { authStore, initAuth, login, logout } from '@/lib/auth';
-import { sb } from '@/lib/db';
-import { hasConsoleAccess, type Whoami } from '@/lib/shell-access';
-import { createStore, useStore } from '@/lib/store';
+import { hasConsoleAccess } from '@/lib/shell-access';
+import { useStore } from '@/lib/store';
+import { whoami as fetchWhoami, wsAuthStore } from '@/lib/ws/staff';
 import { Spinner } from '@/components/ui/Spinner';
-
-/** Temporary shell-local copy of ws_whoami; the lib/ws store is canonical once it lands. */
-export const shellAuthStore = createStore<{ whoami: Whoami | null; loaded: boolean }>({
-  whoami: null,
-  loaded: false,
-});
-
-let whoamiRequested = false;
-
-async function loadWhoami(): Promise<void> {
-  if (whoamiRequested) return;
-  whoamiRequested = true;
-  try {
-    // 42883 (function missing) and any other error fail closed to no-access
-    const { data, error } = await sb.rpc('ws_whoami');
-    shellAuthStore.set({ whoami: error ? null : (data as Whoami | null), loaded: true });
-  } catch {
-    shellAuthStore.set({ whoami: null, loaded: true });
-  }
-}
 
 function LoginCard() {
   const [email, setEmail] = useState('');
@@ -88,13 +68,22 @@ function NoAccess({ email }: { email?: string }) {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loaded } = useStore(authStore);
-  const { whoami, loaded: whoamiLoaded } = useStore(shellAuthStore);
+  const { whoami, loaded: whoamiLoaded } = useStore(wsAuthStore);
   const userId = user?.id;
   useEffect(() => {
     void initAuth();
   }, []);
   useEffect(() => {
-    if (userId) void loadWhoami();
+    if (!userId) {
+      wsAuthStore.set({ whoami: null, loaded: false });
+      return;
+    }
+    // canonical ws_whoami, once per signed-in user; any failure fails closed to the no-access screen
+    let current = true;
+    fetchWhoami()
+      .then((w) => { if (current) wsAuthStore.set({ whoami: w, loaded: true }); })
+      .catch(() => { if (current) wsAuthStore.set({ whoami: null, loaded: true }); });
+    return () => { current = false; };
   }, [userId]);
 
   if (!loaded || (user && !whoamiLoaded)) {
