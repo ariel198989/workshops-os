@@ -1,8 +1,30 @@
 'use client';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { authStore, initAuth, login, logout } from '@/lib/auth';
-import { useStore } from '@/lib/store';
+import { sb } from '@/lib/db';
+import { hasConsoleAccess, type Whoami } from '@/lib/shell-access';
+import { createStore, useStore } from '@/lib/store';
 import { Spinner } from '@/components/ui/Spinner';
+
+/** Temporary shell-local copy of ws_whoami; the lib/ws store is canonical once it lands. */
+export const shellAuthStore = createStore<{ whoami: Whoami | null; loaded: boolean }>({
+  whoami: null,
+  loaded: false,
+});
+
+let whoamiRequested = false;
+
+async function loadWhoami(): Promise<void> {
+  if (whoamiRequested) return;
+  whoamiRequested = true;
+  try {
+    // 42883 (function missing) and any other error fail closed to no-access
+    const { data, error } = await sb.rpc('ws_whoami');
+    shellAuthStore.set({ whoami: error ? null : (data as Whoami | null), loaded: true });
+  } catch {
+    shellAuthStore.set({ whoami: null, loaded: true });
+  }
+}
 
 function LoginCard() {
   const [email, setEmail] = useState('');
@@ -26,8 +48,8 @@ function LoginCard() {
   return (
     <div className="center-screen">
       <form className="hud login" onSubmit={submit}>
-        <img className="login-logo" src="/logo-lockup.png" alt="Corewise" />
-        <h1>Workshops OS</h1>
+        <h1 className="wordmark">Workshops OS</h1>
+        <p className="by">by Corewise</p>
         <p className="hint">כניסה לצוות ההדרכה והניהול</p>
         <label className="field">
           <span className="lbl">אימייל</span>
@@ -65,15 +87,20 @@ function NoAccess({ email }: { email?: string }) {
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { user, admin, loaded } = useStore(authStore);
+  const { user, loaded } = useStore(authStore);
+  const { whoami, loaded: whoamiLoaded } = useStore(shellAuthStore);
+  const userId = user?.id;
   useEffect(() => {
     void initAuth();
   }, []);
+  useEffect(() => {
+    if (userId) void loadWhoami();
+  }, [userId]);
 
-  if (!loaded) {
+  if (!loaded || (user && !whoamiLoaded)) {
     return <div className="center-screen"><Spinner large /></div>;
   }
   if (!user) return <LoginCard />;
-  if (!admin) return <NoAccess email={user.email} />;
+  if (!hasConsoleAccess(whoami)) return <NoAccess email={user.email} />;
   return <>{children}</>;
 }

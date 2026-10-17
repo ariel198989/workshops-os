@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
-import { AuthGate } from '@/components/AuthGate';
-import { Shell } from '@/components/Shell';
+import { AppFrame } from '@/components/AppFrame';
 import { ToastHost } from '@/components/ui/ToastHost';
 
 const FONTS_URL =
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#020509',
+  themeColor: '#F6F8FA',
   width: 'device-width',
   initialScale: 1,
 };
@@ -30,9 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <link rel="stylesheet" href={FONTS_URL} />
       </head>
       <body>
-        <AuthGate>
-          <Shell>{children}</Shell>
-        </AuthGate>
+        <AppFrame>{children}</AppFrame>
         <ToastHost />
       </body>
     </html>

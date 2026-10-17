@@ -5,11 +5,13 @@ import type { ReactNode } from 'react';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import {
   DashboardSquare01Icon, Calendar01Icon, Building02Icon, Layers01Icon,
-  Brain02Icon, Certificate01Icon, Settings02Icon, Logout01Icon,
+  Brain02Icon, Certificate01Icon, Settings02Icon, Logout01Icon, UserMultiple02Icon,
 } from '@hugeicons/core-free-icons';
 import { authStore, logout } from '@/lib/auth';
-import { NAV_ITEMS, isActive, type NavId } from '@/lib/nav';
+import { visibleNavItems, isActive, type NavId } from '@/lib/nav';
+import { roleLabel } from '@/lib/shell-access';
 import { useStore } from '@/lib/store';
+import { shellAuthStore } from './AuthGate';
 
 const NAV_ICONS: Record<NavId, IconSvgElement> = {
   dashboard: DashboardSquare01Icon,
@@ -18,22 +20,25 @@ const NAV_ICONS: Record<NavId, IconSvgElement> = {
   curriculum: Layers01Icon,
   models: Brain02Icon,
   certificates: Certificate01Icon,
+  staff: UserMultiple02Icon,
   settings: Settings02Icon,
 };
 
 function Sidebar() {
   const pathname = usePathname();
   const { user } = useStore(authStore);
+  const { whoami } = useStore(shellAuthStore);
+  const role = whoami?.staff?.role ?? null;
   const email = user?.email ?? '';
 
   return (
     <aside className="sidebar">
       <div className="side-logo">
-        <img className="full" src="/logo-lockup.png" alt="Corewise" />
-        <img className="mark" src="/icon-192.png" alt="Corewise" />
+        <span className="wordmark">Workshops OS</span>
+        <span className="by">by Corewise</span>
       </div>
       <nav className="nav" aria-label="ניווט ראשי">
-        {NAV_ITEMS.map((item) => {
+        {visibleNavItems(role).map((item) => {
           const on = isActive(pathname, item.href);
           return (
             <Link key={item.id} href={item.href} title={item.label}
@@ -48,7 +53,7 @@ function Sidebar() {
         <span className="avatar" aria-hidden="true">{email.charAt(0) || '?'}</span>
         <div className="who">
           <b dir="ltr">{email.split('@')[0]}</b>
-          <span>מנהל</span>
+          <span>{roleLabel(role)}</span>
         </div>
         <button className="ghost sm" onClick={() => void logout()} title="התנתקות" aria-label="התנתקות">
           <HugeiconsIcon icon={Logout01Icon} size={17} />
