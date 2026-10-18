@@ -11,7 +11,7 @@ const HOOK = `export async function resolve(spec, ctx, next) {
   }
 }`;
 register('data:text/javascript,' + encodeURIComponent(HOOK), import.meta.url);
-import { hasConsoleAccess, roleLabel, isPublicPath, type Whoami } from '../lib/shell-access.ts';
+import { decideRoute, roleLabel, isPublicPath, type Whoami } from '../lib/shell-access.ts';
 import type { StaffRole } from '../lib/ws/types.ts';
 import { visibleNavItems } from '../lib/nav.ts';
 
@@ -20,22 +20,22 @@ const staff = (role: StaffRole): Whoami => ({
   user_id: 'u1', staff: { role, full_name: 'x' }, workshops: [], participations: [],
 });
 
-test('staff member has access', () => {
-  assert.equal(hasConsoleAccess(staff('instructor')), true);
+test('staff member gets the console', () => {
+  assert.deepEqual(decideRoute(staff('instructor'), '/workshops'), { kind: 'staff' });
 });
 
-test('no staff and no participations means no access', () => {
+test('no staff and no participations goes to the student join flow, not the console', () => {
   const w: Whoami = { user_id: 'u', staff: null, workshops: [], participations: [] };
-  assert.equal(hasConsoleAccess(w), false);
+  assert.deepEqual(decideRoute(w, '/'), { kind: 'redirect', to: '/student/join' });
 });
 
-test('participant without staff row has access', () => {
+test('participant without staff row is kept out of the console', () => {
   const w: Whoami = { user_id: 'u', staff: null, workshops: [], participations: [{ workshop_id: 'w1', participant_id: 'p1', group_id: null }] };
-  assert.equal(hasConsoleAccess(w), true);
+  assert.deepEqual(decideRoute(w, '/workshops'), { kind: 'redirect', to: '/student' });
 });
 
-test('null whoami (rpc missing) means no access', () => {
-  assert.equal(hasConsoleAccess(null), false);
+test('null whoami (rpc missing) is denied', () => {
+  assert.deepEqual(decideRoute(null, '/'), { kind: 'denied' });
 });
 
 test('role labels are Hebrew', () => {
