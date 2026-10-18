@@ -7,10 +7,10 @@
 insert into public.ws_staff (user_id, email, full_name, role)
 select id, lower(email), 'אריאל', 'owner' from auth.users where lower(email) = 'arielohayon3@gmail.com'
 on conflict (user_id) do update set role = 'owner', active = true;
--- Lidor (CEO): confirm the address before uncommenting
--- insert into public.ws_staff (user_id, email, full_name, role)
--- select id, lower(email), 'לידור', 'admin' from auth.users where lower(email) = 'dahanlid555@gmail.com'
--- on conflict (user_id) do update set role = 'admin', active = true;
+-- Lidor: admin (confirmed by Ariel 2026-10-18)
+insert into public.ws_staff (user_id, email, full_name, role)
+select id, lower(email), 'לידור', 'admin' from auth.users where lower(email) = 'dahanlid555@gmail.com'
+on conflict (user_id) do update set role = 'admin', active = true;
 
 -- §3.9's 17 stub modules intentionally NOT seeded: curriculum.json below supersedes them and no template uses them.
 
