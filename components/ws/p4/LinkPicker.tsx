@@ -33,7 +33,7 @@ export function LinkPicker({ base, rows, onClose, onLinked }: LinkPickerProps) {
   return (
     <Drawer open={base !== null} title={base ? `זה אותו תלמיד? ${base.full_name}` : ''} onClose={onClose}>
       {candidates.length === 0 ? (
-        <p className="hint">אין התאמות. תלמידים שנרשמו באפליקציה ועדיין לא מתאימים לרשימה יופיעו כאן.</p>
+        <p className="hint">אין התאמות. תלמידים שנרשמו באפליקציית התלמידים ועדיין לא מתאימים לרשימה יופיעו כאן.</p>
       ) : (
         <ul className={styles.candidates}>
           {candidates.map((c) => (

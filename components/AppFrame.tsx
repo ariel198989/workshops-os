@@ -1,31 +1,22 @@
 'use client';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, type ReactNode } from 'react';
-import { decideRoute, isPublicPath, type RouteDecision } from '@/lib/shell-access';
+import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
+import { decideRoute, isPublicPath } from '@/lib/shell-access';
 import { useStore } from '@/lib/store';
 import { wsAuthStore } from '@/lib/ws/staff';
-import { Spinner } from '@/components/ui/Spinner';
+import { NotStaffCard } from '@/components/auth/NotStaffCard';
 import { AuthGate } from './AuthGate';
 import { Shell } from './Shell';
 
-const Loading = () => <div className="center-screen"><Spinner large /></div>;
-
-/** Runs inside AuthGate (whoami is loaded): console for staff, student area for everyone else. */
+/** Runs inside AuthGate (whoami is loaded): console for staff, a "staff only" card for everyone else. */
 function RouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { whoami } = useStore(wsAuthStore);
-  const decision: RouteDecision = decideRoute(whoami, pathname);
-  const target = decision.kind === 'redirect' ? decision.to : null;
-
-  useEffect(() => {
-    if (target) router.replace(target);
-  }, [target, router]);
-
-  // 'student' pages bring their own chrome (app/student/layout.tsx); 'denied' is handled by AuthGate
+  // 'denied' (whoami failed to load) is handled by AuthGate, which never renders children in that case
+  const decision = decideRoute(whoami, pathname);
   if (decision.kind === 'staff') return <Shell>{children}</Shell>;
-  if (decision.kind === 'student') return <>{children}</>;
-  return <Loading />;
+  if (decision.kind === 'public') return <>{children}</>;
+  return <NotStaffCard />;
 }
 
 /** Wraps the app in AuthGate + RouteGuard; public routes (/verify/*) render bare. */

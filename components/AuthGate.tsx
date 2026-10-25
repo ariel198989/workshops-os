@@ -2,10 +2,9 @@
 import { useEffect, type ReactNode } from 'react';
 import { authStore, initAuth, logout } from '@/lib/auth';
 import { useStore } from '@/lib/store';
-import { resetStudentContext } from '@/lib/student/context';
 import { whoami as fetchWhoami, wsAuthStore } from '@/lib/ws/staff';
 import { Spinner } from '@/components/ui/Spinner';
-import { AuthCard } from '@/components/student/shell/AuthCard';
+import { LoginCard } from '@/components/auth/LoginCard';
 
 function NoAccess({ email }: { email?: string }) {
   return (
@@ -25,8 +24,8 @@ function NoAccess({ email }: { email?: string }) {
 }
 
 /**
- * Signed out: login / student sign up. Signed in: waits for ws_whoami, then renders children.
- * Who sees what (staff console, student area, join flow) is decided by the route guard in AppFrame.
+ * Signed out: staff login. Signed in: waits for ws_whoami, then renders children.
+ * Who sees what (staff console or the "staff only" card) is decided by the route guard in AppFrame.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loaded } = useStore(authStore);
@@ -36,7 +35,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
     void initAuth();
   }, []);
   useEffect(() => {
-    resetStudentContext();
     if (!userId) {
       wsAuthStore.set({ whoami: null, loaded: false });
       return;
@@ -52,7 +50,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!loaded || (user && !whoamiLoaded)) {
     return <div className="center-screen"><Spinner large /></div>;
   }
-  if (!user) return <AuthCard />;
+  if (!user) return <LoginCard />;
   if (!whoami) return <NoAccess email={user.email} />;
   return <>{children}</>;
 }

@@ -22,16 +22,24 @@ const staff = (role: StaffRole): Whoami => ({
 
 test('staff member gets the console', () => {
   assert.deepEqual(decideRoute(staff('instructor'), '/workshops'), { kind: 'staff' });
+  assert.deepEqual(decideRoute(staff('guest'), '/'), { kind: 'staff' });
 });
 
-test('no staff and no participations goes to the student join flow, not the console', () => {
+test('signed-in user with no staff row and no participations gets the not-staff card', () => {
   const w: Whoami = { user_id: 'u', staff: null, workshops: [], participations: [] };
-  assert.deepEqual(decideRoute(w, '/'), { kind: 'redirect', to: '/student/join' });
+  assert.deepEqual(decideRoute(w, '/'), { kind: 'not-staff' });
 });
 
-test('participant without staff row is kept out of the console', () => {
+test('student (participation, no staff row) is kept out of the console, never redirected', () => {
   const w: Whoami = { user_id: 'u', staff: null, workshops: [], participations: [{ workshop_id: 'w1', participant_id: 'p1', group_id: null }] };
-  assert.deepEqual(decideRoute(w, '/workshops'), { kind: 'redirect', to: '/student' });
+  assert.deepEqual(decideRoute(w, '/workshops'), { kind: 'not-staff' });
+  assert.deepEqual(decideRoute(w, '/staff'), { kind: 'not-staff' });
+});
+
+test('public verify path stays public for everyone, even without whoami', () => {
+  const w: Whoami = { user_id: 'u', staff: null, workshops: [], participations: [] };
+  assert.deepEqual(decideRoute(null, '/verify/ABC'), { kind: 'public' });
+  assert.deepEqual(decideRoute(w, '/verify'), { kind: 'public' });
 });
 
 test('null whoami (rpc missing) is denied', () => {

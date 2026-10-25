@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { listEvents, eventLabel } from '@/lib/ws/events';
 import { fetchOverview } from '@/lib/ws/workshops';
 import type { Overview, WsEvent } from '@/lib/ws/types';
+import { JoinInfo } from '@/components/ws/JoinInfo';
 import { InstantiateEmpty } from '@/components/ws/p4/InstantiateEmpty';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
 import { SessionTimeline } from '@/components/ws/p4/SessionTimeline';
@@ -74,6 +75,13 @@ export default function OverviewPage() {
           </div>
 
           <StatRow totals={overview.totals} />
+
+          {overview.totals.members === 0 ? (
+            <div className={styles.warn} role="status">
+              <span>עדיין אין תלמידים בקבוצות. תלמידים מצטרפים באפליקציית התלמידים עם קוד הסדנה.</span>
+              <JoinInfo code={overview.workshop.code} />
+            </div>
+          ) : null}
 
           {overview.unassigned_participants > 0 ? (
             <div className={styles.warn} role="status">

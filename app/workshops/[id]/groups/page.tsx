@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { UserGroupIcon } from '@hugeicons/core-free-icons';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmButton } from '@/components/ws/ConfirmButton';
+import { JoinInfo } from '@/components/ws/JoinInfo';
 import { toast } from '@/lib/store';
 import { activateGroups, updateGroup } from '@/lib/ws/groups';
 import type { GroupPatch } from '@/lib/ws/types';
@@ -44,7 +45,7 @@ export default function GroupsPage() {
   const activate = async () => {
     try {
       await activateGroups(id);
-      toast('הקבוצות הופעלו באפליקציה', true);
+      toast('הקבוצות הופעלו באפליקציית התלמידים', true);
     } catch (err) {
       toast(errorText(err, 'הפעלת הקבוצות נכשלה'));
     }
@@ -78,12 +79,13 @@ export default function GroupsPage() {
                 {board.polling ? <><span className={styles.liveDot} aria-hidden="true" />מתעדכן כל {POLL_MS / 1000} שניות</> : 'רענון ידני'}
                 {stamp ? ` · עודכן ב-${stamp}` : ''}
               </span>
+              <JoinInfo code={overview.workshop.code} />
             </div>
             <div className={styles.barEnd}>
               <button type="button" className="sm" onClick={() => void board.refresh()} disabled={board.refreshing}>רענון</button>
               {groups.length > 0 ? <button type="button" className="sm" onClick={() => setProjector(true)}>מצב מקרן</button> : null}
               {canEdit && isLive && hasInactiveGroups(groups) ? (
-                <ConfirmButton label="הפעל קבוצות" confirmText="להפעיל את הקבוצות באפליקציה?" tone="primary" small
+                <ConfirmButton label="הפעל קבוצות" confirmText="להפעיל את הקבוצות באפליקציית התלמידים?" tone="primary" small
                   onConfirm={activate} />
               ) : null}
               {canEdit && groups.length > 0 ? (

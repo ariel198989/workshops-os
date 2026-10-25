@@ -20,8 +20,8 @@ export function TeamPrefixField({ value, onChange, disabled = false, error }: Te
         onChange={(e) => onChange(e.target.value)} />
       <p className={message ? styles.fieldErr : styles.fieldHint} role={message ? 'alert' : undefined}>
         {message || (value.trim()
-          ? <span className={styles.preview}>שם הקבוצה באפליקציה: <span className={styles.previewTag}>{teamNamePreview(value)}</span></span>
-          : 'מזהה את הקבוצות באפליקציה. לא ניתן לשנות אחרי הפעלה.')}
+          ? <span className={styles.preview}>שם הקבוצה באפליקציית התלמידים: <span className={styles.previewTag}>{teamNamePreview(value)}</span></span>
+          : 'מזהה את הקבוצות באפליקציית התלמידים. לא ניתן לשנות אחרי הפעלה.')}
       </p>
     </div>
   );

@@ -59,7 +59,7 @@ export function ModelsTable() {
 
   const empty = useMemo(() => (
     <EmptyState icon={Brain02Icon} title="עדיין אין מודלים"
-      text="מודלים של קבוצות הסדנה יופיעו כאן אחרי שהתלמידים יאמנו אותם." />
+      text="מודלים של קבוצות הסדנה יופיעו כאן אחרי שהתלמידים יאמנו אותם באפליקציית התלמידים." />
   ), []);
 
   if (rows === null) return <div className="row"><Spinner /></div>;

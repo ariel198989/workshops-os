@@ -92,7 +92,7 @@ export function GroupCard({ group, members, subproblems, canEdit, projector = fa
       <StatusLines group={group} />
 
       <div>
-        <p className={styles.people}>{members.length} חברים, {linked} מחוברים לאפליקציה</p>
+        <p className={styles.people}>{members.length} חברים, {linked} מחוברים לאפליקציית התלמידים</p>
         <div className={styles.members}>
           {members.length === 0 ? <span className={styles.emptyMembers}>{editable ? 'גררו לכאן תלמידים' : 'אין חברים'}</span> : null}
           {members.map((m) => <MemberChip key={m.id} person={m} draggable={editable} />)}

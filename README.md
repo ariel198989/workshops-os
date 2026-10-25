@@ -20,6 +20,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Two apps
+
+Workshops is split into two Next.js apps that share one Supabase project (the database, RLS and RPCs are owned by this repo, under `supabase/migrations`).
+
+| App | Repo | Who uses it |
+|-----|------|-------------|
+| Console (Workshops OS) | this repo, `workshops-os` | Corewise staff: workshops, groups, participants, curriculum, certificates |
+| Student app | `workshops-student` | Students: sign up, join a workshop with its code, capture, tag, train |
+
+Signed-in users who are not staff see a "staff only" card here with a link to the student app. Public certificate verification (`/verify/[code]`) stays in this app.
+
+Environment variables:
+
+- `NEXT_PUBLIC_STUDENT_URL` (set here): address of the student app. Defaults to `https://workshops-student.vercel.app`.
+- `NEXT_PUBLIC_CONSOLE_URL` (set in the student repo): address of this console, used for links back (for example certificate verification).
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

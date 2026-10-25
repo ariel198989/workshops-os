@@ -81,7 +81,7 @@ export default function AttendancePage() {
           actions={<Link href={`/workshops/${id}/sessions`}><button type="button" className="primary">למפגשים</button></Link>} />
       ) : null}
       {data && !noSessions && noPeople ? (
-        <EmptyState icon={UserGroupIcon} title="אין משתתפים עדיין" text="הוסיפו שמות או חכו שתלמידים יירשמו באפליקציה."
+        <EmptyState icon={UserGroupIcon} title="אין משתתפים עדיין" text="הוסיפו שמות או חכו שתלמידים יצטרפו באפליקציית התלמידים עם קוד הסדנה."
           actions={<Link href={`/workshops/${id}/participants`}><button type="button" className="primary">למשתתפים</button></Link>} />
       ) : null}
       {data && !noSessions && !noPeople ? (

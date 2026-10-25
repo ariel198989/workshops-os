@@ -1,0 +1,8 @@
+.card{width:100%;max-width:400px;padding:28px 24px 22px}
+.title{margin:18px 0 14px;font-size:16px;font-weight:600}
+.field{display:block;margin-bottom:12px}
+.full{width:100%}
+.studentLine{margin-top:16px;text-align:center}
+.primaryLink{display:inline-flex;align-items:center;padding:8px 14px;border-radius:var(--radius);
+  border:1px solid var(--cy);background:var(--cy);color:#fff;font-size:13px;font-weight:600;text-decoration:none}
+.primaryLink:hover{background:#12807A;border-color:#12807A;color:#fff;text-decoration:none}

@@ -4,7 +4,7 @@ import styles from './dash.module.css';
 const STEPS = [
   { href: '/orgs', title: 'צרו ארגון', text: 'בית ספר, חברה או רשות שעבורם מקיימים את הסדנה.' },
   { href: '/workshops/new', title: 'צרו סדנה', text: 'בחרו תבנית, תאריכים וגודל קבוצה. המפגשים נוצרים לבד.' },
-  { href: '/workshops', title: 'פתחו את הסדנה', text: 'עברו למצב חי ותנו לתלמידים להירשם ב-Smart City.' },
+  { href: '/workshops', title: 'פתחו את הסדנה', text: 'עברו למצב חי ותנו לתלמידים להירשם באפליקציית התלמידים עם קוד הסדנה.' },
 ] as const;
 
 /** First-run guide shown to admins when there are no organizations and no workshops yet. */

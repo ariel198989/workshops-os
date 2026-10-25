@@ -42,7 +42,7 @@ export function MemberChip({ person, draggable }: MemberChipProps) {
   return (
     <span className={`${styles.member} ${draggable ? '' : styles.memberStatic} ${dragging ? styles.memberDragging : ''}`}
       draggable={draggable} onDragStart={draggable ? onStart : undefined} onDragEnd={() => setDragging(false)}
-      title={linked ? 'מחובר/ת לאפליקציה' : 'עדיין לא נרשם/ה באפליקציה'}>
+      title={linked ? 'מחובר/ת לאפליקציית התלמידים' : 'עדיין לא נרשם/ה באפליקציית התלמידים'}>
       <span className={linked ? styles.linked : styles.unlinked} aria-hidden="true" />
       {person.full_name}
     </span>

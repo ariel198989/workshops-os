@@ -31,14 +31,6 @@ export async function login(email: string, pass: string) {
   await initAuth();
 }
 
-export async function signup(email: string, pass: string, team: string) {
-  const r = await sb.auth.signUp({ email, password: pass, options: { data: { class_name: team } } });
-  if (r.error) throw r.error;
-  if (!r.data.session) return false; // email confirm required
-  await initAuth();
-  return true;
-}
-
 export async function logout() {
   await sb.auth.signOut();
   location.reload();

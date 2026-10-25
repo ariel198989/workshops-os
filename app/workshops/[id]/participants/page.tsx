@@ -2,10 +2,12 @@
 import { useMemo, useState } from 'react';
 import { InlineEdit, type InlineOption } from '@/components/ws/InlineEdit';
 import { ConfirmButton } from '@/components/ws/ConfirmButton';
+import { JoinInfo } from '@/components/ws/JoinInfo';
 import { DataTable, type Column } from '@/components/ws/DataTable';
 import { StatusPill } from '@/components/ws/StatusPill';
 import { toast } from '@/lib/store';
 import { listGroups } from '@/lib/ws/groups';
+import { getWorkshop } from '@/lib/ws/workshops';
 import {
   listParticipants, moveParticipant, updateParticipant, type ParticipantWithGroup,
 } from '@/lib/ws/participants';
@@ -17,9 +19,9 @@ import { linkCandidates } from '@/components/ws/p4/link-utils';
 import { errorText, useCanEdit, useLoader, useWorkshopId } from '@/components/ws/p4/hooks';
 import styles from '@/components/ws/p4/people.module.css';
 
-interface Data { rows: ParticipantWithGroup[]; groups: WsGroup[] }
+interface Data { rows: ParticipantWithGroup[]; groups: WsGroup[]; code: string }
 
-const SOURCE_LABELS = { roster: 'רשימה', signup: 'הרשמה באפליקציה', manual: 'ידני' } as const;
+const SOURCE_LABELS = { roster: 'רשימה', signup: 'הרשמה באפליקציית התלמידים', manual: 'ידני' } as const;
 const CONSENT_OPTIONS: readonly InlineOption[] = [
   { value: 'true', label: 'אושרה' },
   { value: 'false', label: 'לא אושרה' },
@@ -32,8 +34,8 @@ export default function ParticipantsPage() {
   const canEdit = useCanEdit(id);
   const { data, error, loading, reload, setData } = useLoader<Data>(
     async () => {
-      const [rows, groups] = await Promise.all([listParticipants(id), listGroups(id)]);
-      return { rows, groups };
+      const [rows, groups, workshop] = await Promise.all([listParticipants(id), listGroups(id), getWorkshop(id)]);
+      return { rows, groups, code: workshop.code };
     }, id);
   const [query, setQuery] = useState('');
   const [showWithdrawn, setShowWithdrawn] = useState(false);
@@ -81,7 +83,7 @@ export default function ParticipantsPage() {
           onSave={(v) => move(r.id, text(v))} />
       ) },
     { key: 'account', header: 'חשבון',
-      render: (r) => r.user_id ? <span className={styles.tick} title="מחובר לאפליקציה">✓</span> : (
+      render: (r) => r.user_id ? <span className={styles.tick} title="מחובר לאפליקציית התלמידים">✓</span> : (
         canEdit && linkCandidates(r, rows).length > 0
           ? <button type="button" className="sm" onClick={() => setLinkBase(r)}>זה אותו תלמיד?</button>
           : <span className="muted">-</span>
@@ -113,7 +115,8 @@ export default function ParticipantsPage() {
       <div className={styles.bar}>
         <div>
           <h2>משתתפים</h2>
-          <span className={styles.summary}>{activeCount} פעילים, {linked} מחוברים לאפליקציה</span>
+          <span className={styles.summary}>{activeCount} פעילים, {linked} מחוברים לאפליקציית התלמידים</span>
+          {data ? <div><JoinInfo code={data.code} /></div> : null}
         </div>
         <div className={styles.tools}>
           <input type="search" placeholder="חיפוש לפי שם" aria-label="חיפוש לפי שם" value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -128,7 +131,7 @@ export default function ParticipantsPage() {
 
       <DataTable columns={columns} rows={visible} rowKey={(r) => r.id} dense
         empty={<p className="hud muted" style={{ padding: 24, textAlign: 'center' }}>
-          {rows.length === 0 ? 'אין משתתפים עדיין. הדביקו רשימה, או חכו שתלמידים יירשמו באפליקציה אחרי הפעלת הקבוצות.' : 'אין תוצאות.'}
+          {rows.length === 0 ? 'אין משתתפים עדיין. הדביקו רשימה, או תנו לתלמידים להצטרף באפליקציית התלמידים עם קוד הסדנה.' : 'אין תוצאות.'}
         </p>} />
 
       <LinkPicker base={linkBase} rows={rows} onClose={() => setLinkBase(null)} onLinked={() => void reload()} />
