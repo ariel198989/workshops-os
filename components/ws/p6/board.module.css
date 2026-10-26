@@ -44,6 +44,12 @@
 .hdrRow{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .hdrTitle{font-size:24px;font-weight:600;color:var(--ink)}
 .hdrDesc{max-width:70ch;color:var(--muted)}
+.gateNote{font-size:13px;color:#92400E;max-width:70ch}
+.gateGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 18px;padding:12px 14px;
+  background:#F8FAFC;border:1px solid var(--line);border-radius:var(--radius)}
+.gateWide{grid-column:1 / -1}
+.gateLabel{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:3px}
+@media (max-width:900px){.gateGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-bottom:12px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:10px;height:10px;border-radius:2px;display:inline-block}

@@ -1,11 +1,13 @@
 'use client';
+import { deviceRuleNotes } from '@/lib/ws/device-rules';
 import { updateWorkshop } from '@/lib/ws/workshops';
-import type { WorkshopPatch, WsWorkshop } from '@/lib/ws/types';
+import type { Band, CycleDepth, DeviceMode, WorkshopPatch, WsWorkshop } from '@/lib/ws/types';
 import { InlineEdit } from '../InlineEdit';
 import type { InlineValue } from '../inline-utils';
+import { RuleNotes } from './BandPills';
 import { withFriendlyError } from './db-errors';
 import { KvField } from './KvField';
-import { DEVICE_OPTIONS } from './options';
+import { BAND_OPTIONS, CYCLE_DEPTH_OPTIONS, DEVICE_OPTIONS } from './options';
 import { normalizeCode, validateCode, validateTeamPrefix } from './workshop-utils';
 import styles from './p3.module.css';
 
@@ -21,7 +23,7 @@ type TextKey = 'grade_level' | 'class_label' | 'homeroom_teacher' | 'location';
 type NumKey = 'audience_size' | 'tablets_count';
 
 const TEXT: readonly { key: TextKey; label: string }[] = [
-  { key: 'grade_level', label: 'שכבה' }, { key: 'class_label', label: 'כיתה' },
+  { key: 'grade_level', label: 'שנתון' }, { key: 'class_label', label: 'כיתה' },
   { key: 'homeroom_teacher', label: 'מחנך/ת' }, { key: 'location', label: 'מיקום' },
 ];
 const NUM: readonly { key: NumKey; label: string }[] = [
@@ -35,6 +37,7 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
   const text = (key: TextKey) => (v: InlineValue) => save({ [key]: v === null ? null : String(v) });
   const num = (key: NumKey) => (v: InlineValue) => save({ [key]: v === null ? null : Number(v) });
   const off = !canEdit;
+  const notes = deviceRuleNotes({ band: w.band, cycleDepth: w.cycle_depth, deviceMode: w.device_mode });
 
   return (
     <section className={`hud ${styles.card}`}>
@@ -67,6 +70,24 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
         <KvField label="תאריך סיום">
           <InlineEdit type="date" value={w.ends_on} disabled={off} onSave={(v) => save({ ends_on: v === null ? null : String(v) })} />
         </KvField>
+        <KvField label="שכבה">
+          <InlineEdit type="select" value={w.band} options={BAND_OPTIONS} disabled={off} ariaLabel="שכבה"
+            onSave={(v) => save({ band: v === null ? null : (v as Band) })} />
+        </KvField>
+        <KvField label="עומק מעגל">
+          <InlineEdit type="select" value={w.cycle_depth} options={CYCLE_DEPTH_OPTIONS} disabled={off} ariaLabel="עומק מעגל"
+            onSave={(v) => {
+              if (v === null) throw new Error('יש לבחור עומק מעגל');
+              return save({ cycle_depth: v as CycleDepth });
+            }} />
+        </KvField>
+        <KvField label="מצב מכשיר" wide>
+          <InlineEdit type="select" value={w.device_mode} options={DEVICE_OPTIONS} disabled={off} ariaLabel="מצב מכשיר"
+            onSave={(v) => {
+              if (v === null) throw new Error('יש לבחור מצב מכשיר');
+              return save({ device_mode: v as DeviceMode });
+            }} />
+        </KvField>
         {TEXT.map((f) => (
           <KvField key={f.key} label={f.label}>
             <InlineEdit value={w[f.key]} disabled={off} ariaLabel={f.label} onSave={text(f.key)} />
@@ -85,15 +106,12 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
               return save({ group_size: n });
             }} />
         </KvField>
-        <KvField label="מכשירים">
-          <InlineEdit type="select" value={w.device_mode} options={DEVICE_OPTIONS} disabled={off}
-            onSave={(v) => save({ device_mode: v as WsWorkshop['device_mode'] })} />
-        </KvField>
         <KvField label="הערות" wide>
           <InlineEdit type="textarea" value={w.notes} disabled={off} ariaLabel="הערות"
             onSave={(v) => save({ notes: v === null ? null : String(v) })} />
         </KvField>
       </div>
+      <RuleNotes notes={notes} />
       {identityLocked ? (
         <p className={styles.lockNote}>הקוד והקידומת ננעלים אחרי הפעלת הקבוצות, כי הם מזהים את הנתונים באפליקציית Smart City.</p>
       ) : null}

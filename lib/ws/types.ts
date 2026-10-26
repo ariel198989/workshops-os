@@ -15,6 +15,17 @@ export const TASK_TYPES = ['detect', 'classify', 'count', 'other'] as const;
 export const WORKSHOP_FORMATS = ['sessions', 'hackathon', 'custom'] as const;
 export const STAFF_ROLES = ['owner', 'admin', 'instructor', 'guest'] as const;
 export const WORKSHOP_ROLES = ['lead', 'instructor', 'assistant', 'observer'] as const;
+// migration 20261026_0010: age band, cycle depth, widened device modes, template release gate
+export const CYCLE_DEPTHS = ['L0', 'L1', 'L2', 'L3', 'L4'] as const;
+export const BANDS = ['a-b', 'c-d', 'e-f', 'g-i', 'j-l', 'teachers', 'corporate', 'municipal'] as const;
+export const LEGACY_DEVICE_MODES = ['own_phones', 'tablets_addon', 'mixed'] as const;
+export const DEVICE_MODES = [
+  ...LEGACY_DEVICE_MODES,
+  'facilitator_screen_only', 'school_tablet_capture_only', 'school_tablet_teacher_controlled',
+  'school_tablet_or_lab_pc', 'byod_phone_approved_lesson', 'laptop_plus_phone', 'teacher_laptop_offline_lan',
+  'travelling_kit', 'adult_laptop',
+] as const;
+export const RELEASE_STATUSES = ['live', 'draft', 'blocked'] as const;
 
 export type WorkshopStatus = (typeof WORKSHOP_STATUSES)[number];
 export type SessionStatus = (typeof SESSION_STATUSES)[number];
@@ -30,6 +41,10 @@ export type TaskType = (typeof TASK_TYPES)[number];
 export type WorkshopFormat = (typeof WORKSHOP_FORMATS)[number];
 export type StaffRole = (typeof STAFF_ROLES)[number];
 export type WorkshopRole = (typeof WORKSHOP_ROLES)[number];
+export type CycleDepth = (typeof CYCLE_DEPTHS)[number];
+export type Band = (typeof BANDS)[number];
+export type DeviceMode = (typeof DEVICE_MODES)[number];
+export type ReleaseStatus = (typeof RELEASE_STATUSES)[number];
 
 export type OrgKind = 'school' | 'company' | 'municipality' | 'ngo' | 'other';
 export type ModuleType = 'theory' | 'practice' | 'demo' | 'mixed';
@@ -37,7 +52,6 @@ export type SessionKind = 'regular' | 'practical' | 'hackathon' | 'demo_day' | '
 export type DemoResult = 'pass' | 'partial' | 'fail';
 export type FieldEntity = 'organization' | 'workshop' | 'group' | 'participant';
 export type FieldType = 'text' | 'number' | 'date' | 'boolean' | 'select' | 'multiselect' | 'url';
-export type DeviceMode = 'own_phones' | 'tablets_addon' | 'mixed';
 export type Sector = 'education' | 'municipal' | 'industry' | 'ngo' | 'other';
 export type Readiness = 'no_targets' | 'red' | 'ok' | 'strong';
 
@@ -72,6 +86,8 @@ export interface WsCurriculumTemplate extends Stamped {
   id: string; slug: string | null; title: string; description: string | null; format: WorkshopFormat;
   default_group_size: number; is_default: boolean; is_archived: boolean;
   parent_template_id: string | null; created_by: string | null;
+  band: Band | null; cycle_depth: CycleDepth | null; default_device_mode: DeviceMode | null;
+  release_status: ReleaseStatus; ai_gate_note: string | null; requires_product: string[];
 }
 export interface WsTemplateModule {
   id: string; template_id: string; module_id: string; session_no: number; position: number;
@@ -84,8 +100,8 @@ export interface WsWorkshop extends Stamped {
   starts_on: string | null; ends_on: string | null; timezone: string; sector: Sector;
   grade_level: string | null; class_label: string | null; homeroom_teacher: string | null;
   audience_size: number | null; group_size: number; location: string | null; device_mode: DeviceMode;
-  tablets_count: number | null; sc_campaign_id: string | null; custom_fields: JsonObject;
-  notes: string | null; created_by: string | null;
+  cycle_depth: CycleDepth; band: Band | null; tablets_count: number | null; sc_campaign_id: string | null;
+  custom_fields: JsonObject; notes: string | null; created_by: string | null;
 }
 export interface WsWorkshopStaff { workshop_id: string; user_id: string; role: WorkshopRole; created_at: string }
 export interface WsSession extends Stamped {
@@ -151,7 +167,7 @@ export interface WsEvent {
 export type WorkshopInsert = Pick<WsWorkshop, 'organization_id' | 'code' | 'team_prefix' | 'title'> &
   Partial<Pick<WsWorkshop, 'format' | 'template_id' | 'starts_on' | 'ends_on' | 'timezone' | 'sector'
     | 'grade_level' | 'class_label' | 'homeroom_teacher' | 'audience_size' | 'group_size' | 'location'
-    | 'device_mode' | 'tablets_count' | 'sc_campaign_id' | 'custom_fields' | 'notes'>>;
+    | 'device_mode' | 'cycle_depth' | 'band' | 'tablets_count' | 'sc_campaign_id' | 'custom_fields' | 'notes'>>;
 export type WorkshopPatch = Partial<WorkshopInsert>;
 export type GroupPatch = Partial<Pick<WsGroup, 'display_name' | 'subproblem_id' | 'capacity' | 'color' | 'notes' | 'status'>>;
 export type ParticipantPatch = Partial<Pick<WsParticipant, 'full_name' | 'grade' | 'roles' | 'status'

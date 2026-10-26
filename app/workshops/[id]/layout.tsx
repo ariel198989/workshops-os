@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { StatusPill } from '@/components/ws/StatusPill';
 import { TabStrip, type TabItem } from '@/components/ws/TabStrip';
+import { WorkshopPills } from '@/components/ws/p3/BandPills';
 import { WorkshopStatusBar } from '@/components/ws/p3/WorkshopStatusBar';
 import styles from '@/components/ws/p3/p3.module.css';
 import { bumpData, toast, useStore } from '@/lib/store';
@@ -24,6 +25,7 @@ const TABS: readonly TabItem[] = [
   { id: 'problems', label: 'בעיות' },
   { id: 'deliverables', label: 'תוצרים' },
   { id: 'certificates', label: 'תעודות' },
+  { id: 'assessment', label: 'הערכה' },
   { id: 'settings', label: 'הגדרות' },
 ];
 
@@ -83,6 +85,7 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
                 {orgName ? <Link href={`/orgs/${workshop.organization_id}`} className={styles.link}>{orgName}</Link> : null}
                 <span className={styles.code}>{workshop.code}</span>
                 <StatusPill kind="workshop" value={workshop.status} />
+                <WorkshopPills band={workshop.band} depth={workshop.cycle_depth} device={workshop.device_mode} />
               </div>
             </>
           )}

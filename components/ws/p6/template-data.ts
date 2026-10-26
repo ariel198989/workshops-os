@@ -3,7 +3,9 @@
 import { sb } from '@/lib/db';
 import type { WsCurriculumTemplate } from '@/lib/ws/types';
 
-export type TemplatePatch = Partial<Pick<WsCurriculumTemplate, 'title' | 'description' | 'is_default'>>;
+// band .. ai_gate_note are admin-only columns (migration 20261026_0010); the DB grant is the authority
+export type TemplatePatch = Partial<Pick<WsCurriculumTemplate, 'title' | 'description' | 'is_default'
+  | 'band' | 'cycle_depth' | 'default_device_mode' | 'release_status' | 'ai_gate_note'>>;
 
 export async function updateTemplate(id: string, patch: TemplatePatch): Promise<WsCurriculumTemplate> {
   const { data, error } = await sb.from('ws_curriculum_templates').update(patch).eq('id', id).select().single();

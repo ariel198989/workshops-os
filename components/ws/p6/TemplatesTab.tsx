@@ -7,7 +7,10 @@ import { Spinner } from '@/components/ui/Spinner';
 import { sb } from '@/lib/db';
 import { listTemplates } from '@/lib/ws/curriculum';
 import { toast } from '@/lib/store';
+import { groupTemplatesByBand, templateGateNote } from '@/lib/ws/template-groups';
 import type { WsCurriculumTemplate } from '@/lib/ws/types';
+import { BandPill, DepthPill, ReleasePill } from '../p3/BandPills';
+import { BAND_LABELS, NO_BAND_LABEL } from '../p3/options';
 import { Pill } from '../StatusPill';
 import { templateStats, type TemplateStat, type TemplateStatRow } from './board';
 import { FORMAT_LABELS } from './labels';
@@ -24,14 +27,19 @@ async function loadStats(): Promise<Record<string, TemplateStat>> {
 }
 
 function TemplateCard({ tpl, stat }: { tpl: WsCurriculumTemplate; stat: TemplateStat }) {
+  const gate = templateGateNote(tpl);
   return (
     <Link href={`/curriculum/templates/${tpl.id}`} className={styles.tplCard}>
       <div className={styles.tplStats}>
         <Pill label={FORMAT_LABELS[tpl.format]} tone="blue" />
         {tpl.is_default ? <Pill label="ברירת מחדל" tone="teal" /> : null}
+        <BandPill band={tpl.band} />
+        <DepthPill depth={tpl.cycle_depth} />
+        <ReleasePill status={tpl.release_status} />
       </div>
       <h3 className={styles.tplTitle}>{tpl.title}</h3>
       {tpl.description ? <p className={styles.tplDesc}>{tpl.description}</p> : null}
+      {gate ? <p className={styles.tplGate}>{gate}</p> : null}
       <div className={styles.tplNums}>
         <span><b>{stat.sessions}</b>מפגשים</span>
         <span><b>{stat.minutes}</b>דקות</span>
@@ -61,9 +69,17 @@ export function TemplatesTab() {
   if (templates.length === 0) {
     return <EmptyState icon={Layers01Icon} title="אין תבניות" text="התבניות מופיעות כאן אחרי שיובאו או נוצרו." />;
   }
+  const groups = groupTemplatesByBand(templates, (b) => BAND_LABELS[b], NO_BAND_LABEL);
   return (
-    <div className={styles.tplGrid}>
-      {templates.map((t) => <TemplateCard key={t.id} tpl={t} stat={stats[t.id] ?? NO_STAT} />)}
+    <div className={styles.tplGroups}>
+      {groups.map((g) => (
+        <section key={g.band ?? 'none'} aria-label={g.label}>
+          <h3 className={styles.tplGroupHead}>{g.label}<span>{g.items.length}</span></h3>
+          <div className={styles.tplGrid}>
+            {g.items.map((t) => <TemplateCard key={t.id} tpl={t} stat={stats[t.id] ?? NO_STAT} />)}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

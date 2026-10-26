@@ -1,15 +1,21 @@
 'use client';
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/lib/store';
 import { instantiateCurriculum, listTemplates } from '@/lib/ws/curriculum';
+import { deviceRuleNotes, groupDevices, prefillFromBand, prefillFromTemplate, type Prefill } from '@/lib/ws/device-rules';
 import { listOrganizations } from '@/lib/ws/orgs';
-import type { DeviceMode, WorkshopFormat, WsCurriculumTemplate, WsOrganization } from '@/lib/ws/types';
+import { templateGateNote } from '@/lib/ws/template-groups';
+import {
+  DEVICE_MODES, type Band, type CycleDepth, type DeviceMode, type WorkshopFormat, type WsCurriculumTemplate,
+  type WsOrganization,
+} from '@/lib/ws/types';
 import { createWorkshop } from '@/lib/ws/workshops';
+import { BandPill, DepthPill, ReleasePill, RuleNotes } from './BandPills';
 import { dbErrorMessage } from './db-errors';
 import { validateWorkshopForm } from './form-utils';
 import { OrgPicker } from './OrgPicker';
-import { DEVICE_OPTIONS, FORMAT_LABELS, FORMAT_OPTIONS } from './options';
+import { BAND_OPTIONS, CYCLE_DEPTH_OPTIONS, DEVICE_LABELS, FORMAT_LABELS, FORMAT_OPTIONS } from './options';
 import { TeamPrefixField } from './TeamPrefixField';
 import { firstSessionIso, normalizeCode, pickDefaultTemplate, suggestCode } from './workshop-utils';
 import styles from './p3.module.css';
@@ -18,17 +24,20 @@ interface FormState {
   orgId: string; title: string; code: string; codeTouched: boolean; prefix: string;
   format: WorkshopFormat; templateId: string | null; groupSize: string | null;
   startsOn: string; endsOn: string; grade: string; classLabel: string; audience: string;
-  device: DeviceMode; location: string; notes: string;
+  band: Band | null; depth: CycleDepth; device: DeviceMode; location: string; notes: string;
 }
 
 const INITIAL: FormState = {
   orgId: '', title: '', code: '', codeTouched: false, prefix: '', format: 'sessions', templateId: null,
-  groupSize: null, startsOn: '', endsOn: '', grade: '', classLabel: '', audience: '', device: 'own_phones',
-  location: '', notes: '',
+  groupSize: null, startsOn: '', endsOn: '', grade: '', classLabel: '', audience: '',
+  band: null, depth: 'L3', device: 'school_tablet_or_lab_pc', location: '', notes: '',
 };
 
 const FALLBACK_GROUP_SIZE = 4;
 const orNull = (s: string): string | null => s.trim() || null;
+const toPrefill = (f: FormState): Prefill => ({ band: f.band, cycleDepth: f.depth, deviceMode: f.device });
+const fromPrefill = (p: Prefill): Pick<FormState, 'band' | 'depth' | 'device'> =>
+  ({ band: p.band, depth: p.cycleDepth, device: p.deviceMode });
 
 function Field({ label, htmlFor, error, className, children }: {
   label: string; htmlFor?: string; error?: string; className?: string; children: ReactNode;
@@ -39,6 +48,47 @@ function Field({ label, htmlFor, error, className, children }: {
       {children}
       {error === undefined ? null : <p className={styles.fieldErr} role={error ? 'alert' : undefined}>{error}</p>}
     </div>
+  );
+}
+
+/** Radio-style template list: title, band / depth / release pills, and the gate note for draft or blocked. */
+function TemplatePicker({ templates, selectedId, onPick }: {
+  templates: readonly WsCurriculumTemplate[]; selectedId: string | null; onPick: (id: string) => void;
+}) {
+  return (
+    <div className={styles.tplList} role="radiogroup" aria-label="תבנית">
+      {templates.map((t) => {
+        const on = t.id === selectedId;
+        const gate = templateGateNote(t);
+        return (
+          <button key={t.id} type="button" role="radio" aria-checked={on}
+            className={`${styles.tplItem} ${on ? styles.tplItemOn : ''}`} onClick={() => onPick(t.id)}>
+            <span className={styles.tplItemRow}>
+              <span className={styles.tplItemTitle}>{t.title}</span>
+              <BandPill band={t.band} />
+              <DepthPill depth={t.cycle_depth} />
+              <ReleasePill status={t.release_status} />
+            </span>
+            {gate ? <span className={styles.tplItemNote}>{gate}</span> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function DeviceSelect({ band, value, onChange }: { band: Band | null; value: DeviceMode; onChange: (d: DeviceMode) => void }) {
+  const { recommended, other } = groupDevices(band, DEVICE_MODES);
+  const option = (d: DeviceMode) => <option key={d} value={d}>{DEVICE_LABELS[d]}</option>;
+  return (
+    <select id="ws-device" value={value} onChange={(e) => onChange(e.target.value as DeviceMode)}>
+      {recommended.length > 0 ? (
+        <>
+          <optgroup label="מומלץ לשכבה">{recommended.map(option)}</optgroup>
+          <optgroup label="כל המכשירים">{other.map(option)}</optgroup>
+        </>
+      ) : other.map(option)}
+    </select>
   );
 }
 
@@ -69,6 +119,21 @@ export function NewWorkshopForm() {
   const values = { orgId: f.orgId, title: f.title, code, prefix: f.prefix, startsOn: f.startsOn, endsOn: f.endsOn,
     audience: f.audience, groupSize };
   const errors = showErrors ? validateWorkshopForm(values) : {};
+  const notes = deviceRuleNotes(toPrefill(f));
+
+  // a newly effective template (first load, format change, click) prefills band / depth / device once;
+  // whatever the user changes afterwards stays until the template changes again
+  const appliedTemplate = useRef<string | null>(null);
+  useEffect(() => {
+    if (!template || appliedTemplate.current === template.id) return;
+    appliedTemplate.current = template.id;
+    setF((p) => ({ ...p, ...fromPrefill(prefillFromTemplate(template, toPrefill(p))) }));
+  }, [template]);
+
+  const pickBand = (raw: string) => {
+    const band = (raw || null) as Band | null;
+    setF((p) => ({ ...p, ...fromPrefill(prefillFromBand(band, toPrefill(p))) }));
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -81,7 +146,8 @@ export function NewWorkshopForm() {
         template_id: template?.id ?? null, starts_on: orNull(f.startsOn), ends_on: orNull(f.endsOn),
         grade_level: orNull(f.grade), class_label: orNull(f.classLabel),
         audience_size: f.audience.trim() ? Number(f.audience) : null, group_size: Number(groupSize),
-        device_mode: f.device, location: orNull(f.location), notes: orNull(f.notes),
+        band: f.band, cycle_depth: f.depth, device_mode: f.device,
+        location: orNull(f.location), notes: orNull(f.notes),
       });
       if (template) {
         try {
@@ -120,12 +186,28 @@ export function NewWorkshopForm() {
             {FORMAT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </Field>
-        <Field label="תבנית" htmlFor="ws-template" error={formatTemplates.length === 0 ? `אין תבנית לפורמט ${FORMAT_LABELS[f.format]}` : ''}>
-          <select id="ws-template" value={template?.id ?? ''} disabled={formatTemplates.length === 0}
-            onChange={(e) => setF((p) => ({ ...p, templateId: e.target.value, groupSize: null }))}>
-            {formatTemplates.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+        <Field label="תבנית" className={styles.spanAll}
+          error={formatTemplates.length === 0 ? `אין תבנית לפורמט ${FORMAT_LABELS[f.format]}` : ''}>
+          {formatTemplates.length === 0 ? null : (
+            <TemplatePicker templates={formatTemplates} selectedId={template?.id ?? null}
+              onPick={(id) => setF((p) => ({ ...p, templateId: id, groupSize: null }))} />
+          )}
+        </Field>
+        <Field label="שכבה" htmlFor="ws-band">
+          <select id="ws-band" value={f.band ?? ''} onChange={(e) => pickBand(e.target.value)}>
+            <option value="">-</option>
+            {BAND_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </Field>
+        <Field label="עומק מעגל" htmlFor="ws-depth">
+          <select id="ws-depth" value={f.depth} onChange={(e) => set('depth', e.target.value as CycleDepth)}>
+            {CYCLE_DEPTH_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </Field>
+        <Field label="מצב מכשיר" htmlFor="ws-device">
+          <DeviceSelect band={f.band} value={f.device} onChange={(d) => set('device', d)} />
+        </Field>
+        {notes.length > 0 ? <div className={styles.spanAll}><RuleNotes notes={notes} /></div> : null}
         <Field label="גודל קבוצה" htmlFor="ws-gsize" error={errors.groupSize ?? ''}>
           <input id="ws-gsize" type="number" min={2} max={8} value={groupSize} onChange={(e) => set('groupSize', e.target.value)} />
         </Field>
@@ -138,18 +220,13 @@ export function NewWorkshopForm() {
         <Field label="מספר משתתפים" htmlFor="ws-audience" error={errors.audience ?? ''}>
           <input id="ws-audience" type="number" min={1} max={500} value={f.audience} onChange={(e) => set('audience', e.target.value)} />
         </Field>
-        <Field label="שכבה" htmlFor="ws-grade">
+        <Field label="שנתון" htmlFor="ws-grade">
           <input id="ws-grade" type="text" value={f.grade} onChange={(e) => set('grade', e.target.value)} />
         </Field>
         <Field label="כיתה" htmlFor="ws-class">
           <input id="ws-class" type="text" value={f.classLabel} onChange={(e) => set('classLabel', e.target.value)} />
         </Field>
-        <Field label="מכשירים" htmlFor="ws-device">
-          <select id="ws-device" value={f.device} onChange={(e) => set('device', e.target.value as DeviceMode)}>
-            {DEVICE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </Field>
-        <Field label="מיקום" htmlFor="ws-location" className={styles.span2}>
+        <Field label="מיקום" htmlFor="ws-location" className={styles.spanAll}>
           <input id="ws-location" type="text" value={f.location} onChange={(e) => set('location', e.target.value)} />
         </Field>
         <Field label="הערות" htmlFor="ws-notes" className={styles.spanAll}>

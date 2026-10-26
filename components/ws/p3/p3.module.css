@@ -51,6 +51,23 @@
 .checkInline{display:inline-flex;align-items:center;gap:6px;font-size:13px}
 .checkInline input{width:auto}
 
+/* template picker (new workshop) */
+.tplList{display:grid;gap:6px;margin-bottom:4px}
+.tplItem{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:4px;padding:9px 12px;width:100%;
+  background:#fff;border:1px solid #CBD5E1;border-radius:var(--radius);transition:border-color .12s,background .12s}
+.tplItem:hover{border-color:var(--cy)}
+.tplItem:focus-visible{outline:2px solid var(--cy);outline-offset:1px}
+.tplItemOn,.tplItem.tplItemOn{border-color:var(--cy);background:var(--cy-soft)}
+.tplItemRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tplItemTitle{font-size:14px;font-weight:500;color:var(--ink);margin-inline-end:4px}
+.tplItemNote{font-size:12.5px;color:#92400E}
+
+/* legality notes (band / depth / device) */
+.notes{display:grid;gap:6px;margin:4px 0 10px;padding:0;list-style:none}
+.notes li{font-size:13px;line-height:1.5;padding:8px 12px;border-radius:var(--radius);border:1px solid transparent}
+.noteWarn{background:var(--gold-soft);border-color:var(--gold-line)!important;color:#92400E}
+.noteInfo{background:#EEF2F6;border-color:#DDE3EA!important;color:#475569}
+
 @media (max-width:900px){
   .formGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .span2{grid-column:span 2}

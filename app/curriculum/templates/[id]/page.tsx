@@ -13,7 +13,7 @@ import { TYPE_TONES, typeLabel } from '@/components/ws/p6/labels';
 import { useTemplateBoard } from '@/components/ws/p6/useTemplateBoard';
 import styles from '@/components/ws/p6/board.module.css';
 import { useStore } from '@/lib/store';
-import { isCoreStaff, wsAuthStore } from '@/lib/ws/staff';
+import { isAdmin, isCoreStaff, wsAuthStore } from '@/lib/ws/staff';
 
 const TYPE_COLORS: Record<keyof typeof TYPE_TONES, string> = {
   theory: '#2563EB', practice: '#17948C', demo: '#D97706', mixed: '#0F1C2E',
@@ -22,7 +22,9 @@ const TYPE_COLORS: Record<keyof typeof TYPE_TONES, string> = {
 /** One template: sessions as columns, drag to reorder or move between sessions. */
 export default function TemplatePage() {
   const { id } = useParams<{ id: string }>();
-  const canEdit = isCoreStaff(useStore(wsAuthStore).whoami);
+  const { whoami } = useStore(wsAuthStore);
+  const canEdit = isCoreStaff(whoami);
+  const admin = isAdmin(whoami);
   const board = useTemplateBoard(id);
   const [pickFor, setPickFor] = useState<number | null>(null);
 
@@ -39,7 +41,7 @@ export default function TemplatePage() {
 
   return (
     <>
-      <TemplateHeader template={board.tpl} canEdit={canEdit} sessions={sessions} minutes={total}
+      <TemplateHeader template={board.tpl} canEdit={canEdit} admin={admin} sessions={sessions} minutes={total}
         onChanged={(next) => board.setTpl((cur) => (cur ? { ...cur, ...next } : cur))} />
       <div className={styles.legend}>
         {(Object.keys(TYPE_COLORS) as (keyof typeof TYPE_COLORS)[]).map((k) => (
