@@ -43,6 +43,10 @@ export function Drawer({ open, title, onClose, width = '440px', children }: Draw
           <button type="button" className="ghost sm" onClick={onClose} aria-label="סגירה">סגירה</button>
         </header>
         <div className={styles.drawerBody}>{children}</div>
+        {/* phone only (CSS): a second close control within thumb reach at the bottom of the sheet */}
+        <footer className={styles.drawerFoot}>
+          <button type="button" onClick={onClose}>סגירה</button>
+        </footer>
       </aside>
     </>
   );

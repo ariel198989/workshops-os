@@ -110,3 +110,32 @@
   .grid{grid-template-columns:1fr}
   .projGrid{grid-template-columns:1fr}
 }
+
+/* ---------- phone ---------- */
+@media (max-width:640px){
+  .bar{flex-direction:column;align-items:stretch;gap:10px}
+  .barStart,.barEnd{align-items:stretch;flex-direction:column}
+  .barEnd>button{width:100%}
+  .countForm{flex-wrap:wrap}
+  .countForm input{flex:1 1 90px;width:auto;min-height:44px}
+  .countForm button{flex:1 1 100%}
+  .card{font-size:14px;padding:14px}
+  .name{overflow-wrap:anywhere}
+  .teamChip{white-space:normal;overflow-wrap:anywhere}
+  .copy{min-height:44px;padding:.3em .9em}
+  .facts{grid-template-columns:repeat(2,1fr);gap:.6em .4em}
+  .member{min-height:36px;padding:.3em .8em}
+  .tray{padding:12px 14px}
+  .drift li{align-items:flex-start;flex-direction:column;gap:6px}
+  .drift li button{width:100%}
+  .createBox{flex-direction:column;align-items:stretch}
+  .createBox input{width:100%}
+
+  /* projector on a phone: still readable, nothing pushes past the viewport */
+  .projector{padding:14px max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .projHead{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:14px}
+  .projHead h2{font-size:clamp(20px,6vw,26px);overflow-wrap:anywhere}
+  .projHead .barEnd>button{width:100%}
+  .projGrid{gap:12px}
+  .projGrid .card{font-size:15px}
+}

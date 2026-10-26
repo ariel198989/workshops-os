@@ -60,3 +60,29 @@
   .grid2,.snapGrid{grid-template-columns:1fr}
   .failureRow{grid-template-columns:56px 1fr;}
 }
+
+/* ---------- phone ---------- */
+@media (max-width:640px){
+  .sectionHead{flex-wrap:wrap;align-items:flex-start}
+  .sectionHead h2{min-width:0;overflow-wrap:anywhere}
+  .sectionHead button{flex:1 1 100%}
+  .cardHead{align-items:flex-start}
+  .cardTitle{min-width:0;overflow-wrap:anywhere}
+  .newForm{max-width:none}
+  .fieldBody{font-size:15px}
+  .toggleChip{min-height:44px;font-size:14px;padding:6px 14px}
+  .level{min-height:44px;font-size:13.5px;flex:1 1 auto}
+  .rubricFoot{align-items:stretch;flex-direction:column}
+  .criterion{padding:12px}
+  .gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .deliverableHead{align-items:flex-start}
+  .deliverableHead button{min-width:0;flex:1 1 100%;justify-content:flex-start;flex-wrap:wrap;text-align:start}
+  .deliverableHead button code{overflow-wrap:anywhere}
+  .lockBar{flex-direction:column;align-items:stretch}
+  .urlInput{flex:1 1 100%;min-width:0}
+  .failureRow{grid-template-columns:56px minmax(0,1fr)}
+  .failureRow button{grid-column:1 / -1}
+  .issueBar{gap:12px;align-items:stretch;flex-direction:column}
+  .slider{min-width:0;width:100%}
+  .checkRow{min-height:44px}
+}

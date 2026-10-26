@@ -70,7 +70,11 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, empty, dense =
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               onKeyDown={onRowClick ? (e) => onKey(e, row) : undefined}>
               {columns.map((c) => (
-                <td key={c.key} className={c.num ? 'num' : undefined}>{c.render(row)}</td>
+                // data-label feeds the stacked-card layout on phones (td::before shows the column header)
+                <td key={c.key} className={c.num ? 'num' : undefined}
+                  data-label={typeof c.header === 'string' ? c.header : undefined}>
+                  {c.render(row)}
+                </td>
               ))}
             </tr>
           ))}

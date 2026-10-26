@@ -50,8 +50,8 @@ export function StaffAddPanel({ onAdded }: StaffAddPanelProps) {
     <section className={`hud ${styles.card}`} aria-label="הוספת איש צוות">
       <div className={styles.assign} style={{ marginTop: 0 }}>
         <input type="email" dir="ltr" placeholder="name@example.com" value={email} aria-label="אימייל"
-          style={{ width: 'auto', minWidth: 230 }} onChange={(e) => setEmail(e.target.value)} />
-        <input type="text" placeholder="שם (לא חובה)" value={name} aria-label="שם" style={{ width: 'auto', minWidth: 160 }}
+          className={styles.inputEmail} onChange={(e) => setEmail(e.target.value)} />
+        <input type="text" placeholder="שם (לא חובה)" value={name} aria-label="שם" className={styles.inputName}
           onChange={(e) => setName(e.target.value)} />
         <select value={role} aria-label="תפקיד" onChange={(e) => setRole(e.target.value as GrantableRole)}>
           {GRANTABLE_ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

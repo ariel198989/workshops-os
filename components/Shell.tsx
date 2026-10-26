@@ -2,27 +2,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
-import {
-  DashboardSquare01Icon, Calendar01Icon, Building02Icon, Layers01Icon,
-  Brain02Icon, Certificate01Icon, Settings02Icon, Logout01Icon, UserMultiple02Icon,
-} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Logout01Icon } from '@hugeicons/core-free-icons';
 import { authStore, logout } from '@/lib/auth';
-import { visibleNavItems, isActive, type NavId } from '@/lib/nav';
+import { visibleNavItems, isActive } from '@/lib/nav';
 import { roleLabel } from '@/lib/shell-access';
 import { useStore } from '@/lib/store';
 import { wsAuthStore } from '@/lib/ws/staff';
-
-const NAV_ICONS: Record<NavId, IconSvgElement> = {
-  dashboard: DashboardSquare01Icon,
-  workshops: Calendar01Icon,
-  orgs: Building02Icon,
-  curriculum: Layers01Icon,
-  models: Brain02Icon,
-  certificates: Certificate01Icon,
-  staff: UserMultiple02Icon,
-  settings: Settings02Icon,
-};
+import { MobileNav } from './shell/MobileNav';
+import { NAV_ICONS } from './shell/nav-icons';
 
 function Sidebar() {
   const pathname = usePathname();
@@ -63,11 +51,13 @@ function Sidebar() {
   );
 }
 
+/** Desktop: sidebar + content. Phone (<= 640px): the sidebar is hidden and MobileNav provides a bottom tab bar. */
 export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <Sidebar />
       <main className="content">{children}</main>
+      <MobileNav />
     </div>
   );
 }

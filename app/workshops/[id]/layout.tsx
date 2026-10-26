@@ -76,7 +76,7 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <header className={styles.wsHead}>
-        <div>
+        <div className={styles.wsHeadMain}>
           <Link href="/workshops" className={styles.crumb}>סדנאות</Link>
           {workshop === undefined ? <Spinner /> : (
             <>

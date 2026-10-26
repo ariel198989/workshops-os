@@ -1,3 +1,5 @@
+'use client';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import styles from './ws.module.css';
 
@@ -15,8 +17,17 @@ interface TabStripProps {
 }
 
 export function TabStrip({ base, tabs, active }: TabStripProps) {
+  const nav = useRef<HTMLElement>(null);
+
+  // phone: the strip scrolls horizontally, so bring the active chip into view when it changes
+  useEffect(() => {
+    const el = nav.current;
+    if (!el || el.scrollWidth <= el.clientWidth) return;
+    el.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, [active]);
+
   return (
-    <nav className={styles.tabs} aria-label="לשוניות">
+    <nav ref={nav} className={styles.tabs} aria-label="לשוניות">
       {tabs.map((t) => {
         const on = t.id === active;
         return (

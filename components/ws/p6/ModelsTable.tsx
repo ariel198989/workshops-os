@@ -63,9 +63,6 @@ export function ModelsTable() {
   ), []);
 
   if (rows === null) return <div className="row"><Spinner /></div>;
-  return (
-    <div className="hud">
-      <DataTable columns={COLUMNS} rows={rows} rowKey={(r) => r.model.id} empty={empty} dense />
-    </div>
-  );
+  // DataTable (and the EmptyState it falls back to) already paint their own .hud surface
+  return <DataTable columns={COLUMNS} rows={rows} rowKey={(r) => r.model.id} empty={empty} dense />;
 }

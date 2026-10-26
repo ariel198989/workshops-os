@@ -53,7 +53,7 @@ export default function Page() {
             </button>
           ))}
         </div>
-        <select value={orgId} aria-label="היקף" style={{ width: 'auto', minWidth: 170 }} onChange={(e) => setOrgId(e.target.value)}>
+        <select value={orgId} aria-label="היקף" className={styles.scopeSelect} onChange={(e) => setOrgId(e.target.value)}>
           <option value="">גלובלי (כל הארגונים)</option>
           {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
         </select>

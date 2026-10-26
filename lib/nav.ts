@@ -31,3 +31,33 @@ export function isActive(pathname: string | null, href: string): boolean {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+/** Short labels for the phone tab bar (11px under an icon); items not listed keep their label. */
+const MOBILE_LABELS: Partial<Record<NavId, string>> = {
+  dashboard: 'לוח',
+  curriculum: 'מערך',
+  models: 'מודלים',
+};
+
+export function mobileLabel(item: NavItem): string {
+  return MOBILE_LABELS[item.id] ?? item.label;
+}
+
+/** Which sections earn a slot in the bottom bar, most important first; the rest go under "עוד". */
+const MOBILE_PRIORITY: readonly NavId[] = [
+  'workshops', 'orgs', 'curriculum', 'staff', 'certificates', 'models', 'dashboard', 'settings',
+];
+
+export interface MobileNav {
+  readonly primary: readonly NavItem[];
+  readonly more: readonly NavItem[];
+}
+
+/** Bottom bar = up to `slots` visible items by priority; everything else (in menu order) under "עוד". */
+export function splitMobileNav(items: readonly NavItem[], slots = 4): MobileNav {
+  const primary = MOBILE_PRIORITY
+    .flatMap((id) => items.filter((item) => item.id === id))
+    .slice(0, slots);
+  const more = items.filter((item) => !primary.includes(item));
+  return { primary, more };
+}

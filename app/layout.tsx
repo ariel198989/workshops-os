@@ -17,6 +17,8 @@ export const viewport: Viewport = {
   themeColor: '#F6F8FA',
   width: 'device-width',
   initialScale: 1,
+  // lets env(safe-area-inset-*) report the notch / home indicator on phones
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

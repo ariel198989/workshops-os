@@ -178,9 +178,65 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
   .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .split{grid-template-columns:1fr}
 }
-@media (max-width:560px){
-  .kpi-grid{grid-template-columns:1fr}
-  .page-head h1{font-size:20px}
+/* ---------- phone (<= 640px): one shared breakpoint for every screen ----------
+   Sidebar is replaced by the bottom tab bar (components/shell/MobileNav), the content gets a
+   16px / safe-area gutter and room for the bar, controls grow to 44px touch targets, inputs
+   stay at 16px so iOS does not zoom, and wide tables scroll inside their own wrapper. */
+@media (max-width:640px){
+  body{font-size:15px}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .sidebar{display:none}
+  .content{padding:14px max(16px,env(safe-area-inset-left),env(safe-area-inset-right)) calc(72px + env(safe-area-inset-bottom));
+    animation:none}
+
+  /* typography: headings scale down, long titles and pills wrap instead of pushing the page wider */
+  .page-head{flex-direction:column;align-items:stretch;gap:12px;padding-bottom:14px;margin-bottom:16px}
+  .page-head>div{min-width:0}
+  .page-head h1{font-size:clamp(20px,5.5vw,24px);overflow-wrap:anywhere}
+  .page-head p{font-size:14px}
+  .page-actions{width:100%}
+  .page-actions>button,.page-actions>a{flex:1 1 auto;min-width:0}
+  .pill{white-space:normal;text-align:start}
+  code{overflow-wrap:anywhere}
+  .hint{font-size:13px}
+  .lbl{font-size:13px}
+
+  /* controls: 44px targets, 16px text */
+  input[type=text],input[type=email],input[type=password],input[type=search],input[type=number],input[type=date],
+  input[type=datetime-local],textarea,select{font-size:16px;min-height:44px;padding:9px 12px}
+  select{padding:8px 12px}
+  input[type=checkbox],input[type=radio]{width:22px;height:22px;accent-color:var(--cy)}
+  button{min-height:44px;font-size:14px;padding:9px 14px}
+  button.sm{min-height:44px;font-size:13px;padding:8px 12px}
+  .field{margin-bottom:14px}
+
+  /* toolbars: filters share the row two-up, search takes the whole row */
+  .toolbar{gap:8px}
+  .toolbar input,.toolbar select{min-width:0;width:auto;flex:1 1 calc(50% - 4px)}
+  .toolbar input[type=search]{flex-basis:100%}
+  .toolbar .hint{flex-basis:100%}
+
+  /* KPI tiles and splits stack */
+  .kpi-grid{grid-template-columns:1fr;gap:10px;margin-bottom:16px}
+  .kpi .kpi-value{font-size:30px}
+  .card{padding:14px;margin-bottom:12px}
+
+  /* the plain table (assessment): scroll wrapper with a sticky first column */
+  .table-wrap{max-height:none;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-wrap table.tbl{min-width:100%}
+  .tbl th,.tbl td{padding:10px 12px}
+  .table-wrap .tbl th:first-child,.table-wrap .tbl td:first-child{position:sticky;inset-inline-start:0;z-index:1;
+    background:var(--panel);min-width:140px;max-width:220px;overflow-wrap:anywhere;border-inline-end:1px solid var(--line)}
+  .table-wrap .tbl thead th:first-child{z-index:2;background:#F8FAFC}
+
+  /* empty state, login / denied cards, toast above the tab bar */
+  .empty{padding:36px 16px}
+  .center-screen{padding:16px max(16px,env(safe-area-inset-left),env(safe-area-inset-right))}
+  .login{padding:24px 18px 20px}
+  .login h1.wordmark{font-size:20px}
+  .denied{padding:28px 18px}
+  .denied h1{font-size:20px}
+  .toast{inset-inline:16px;max-width:none;bottom:calc(72px + env(safe-area-inset-bottom))}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}

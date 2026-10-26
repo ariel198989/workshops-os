@@ -50,3 +50,16 @@
   .two{grid-template-columns:1fr}
   .steps{grid-template-columns:1fr}
 }
+
+/* ---------- phone ---------- */
+@media (max-width:640px){
+  .stack{gap:18px}
+  .live{padding:16px}
+  .liveTitle{font-size:18px;overflow-wrap:anywhere}
+  .liveLink{width:100%;min-height:48px}
+  .row{flex-wrap:wrap;padding:10px 14px}
+  .rowMain{flex:1 1 60%}
+  .rowTitle,.rowSub{white-space:normal;overflow-wrap:anywhere}
+  .step{padding:16px}
+  .intro h2{font-size:clamp(18px,5vw,20px)}
+}

@@ -95,7 +95,74 @@
 .inviteRow input{width:auto;min-width:220px}
 .inviteRow select{width:auto}
 
+.drawerFoot{display:none}
+
 @media (max-width:700px){
   .fields{grid-template-columns:1fr}
   .drawer{width:100vw!important}
 }
+
+/* ---------- phone ---------- */
+@media (max-width:640px){
+  /* DataTable -> stacked cards: the header row hides, every cell becomes "label  value",
+     the first cell is the card title, empty cells (e.g. no actions) collapse. */
+  .tableWrap{max-height:none;overflow:visible;border:none;background:transparent;box-shadow:none}
+  .tableWrap table,.tableWrap table tbody,.tableWrap table tr,.tableWrap table td{display:block}
+  .tableWrap table thead{display:none}
+  .tableWrap table tbody tr{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow-card);padding:6px 14px;margin-bottom:10px}
+  .tableWrap table tbody tr:hover{background:var(--panel)}
+  .tableWrap table td,.tableWrap table.dense td{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 0;
+    border-bottom:1px solid var(--line);font-size:14px;text-align:start}
+  .tableWrap table td:last-child{border-bottom:none}
+  .tableWrap table td:empty{display:none}
+  .tableWrap table td::before{content:attr(data-label);flex:0 0 96px;color:var(--muted);font-size:12.5px;line-height:1.4}
+  .tableWrap table td:not([data-label])::before,.tableWrap table td[data-label=""]::before{display:none}
+  .tableWrap table td>*{min-width:0}
+  .tableWrap table td:first-child{display:block;padding-top:8px;font-size:15.5px;font-weight:600;color:var(--ink)}
+  .tableWrap table td:first-child::before{display:none}
+  .tableWrap table td.num{text-align:start}
+  .clickable:focus-visible{outline-offset:0}
+
+  /* inline edit: 44px tap area, fields take the row */
+  .inlineView{min-height:44px;display:inline-flex;align-items:center;padding:10px 6px;margin:-6px}
+  .inline,.inlineField{width:100%;min-width:0}
+
+  /* drawers -> full-screen sheets with a sticky header and a thumb-reach close button */
+  .drawer{inset:0;width:100%!important;max-width:none;border:none;box-shadow:none;animation:slideUp .22s ease}
+  .drawerHead{position:sticky;top:0;z-index:1;min-height:56px;background:var(--panel);
+    padding:10px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left))}
+  .drawerHead h2{min-width:0;overflow-wrap:anywhere}
+  .drawerBody{padding:16px max(16px,env(safe-area-inset-right)) 16px max(16px,env(safe-area-inset-left))}
+  .drawerFoot{display:block;position:sticky;bottom:0;padding:10px max(16px,env(safe-area-inset-right))
+    calc(10px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+    background:var(--panel);border-top:1px solid var(--line)}
+  .drawerFoot button{width:100%}
+
+  /* confirm: question on its own line, yes / no share the next */
+  .confirm{width:100%}
+  .confirmText{flex-basis:100%}
+  .confirm button{flex:1 1 auto}
+
+  /* TabStrip -> scrollable chip strip, sticky under the workshop header */
+  .tabs{position:sticky;top:0;z-index:4;gap:6px;padding:8px 16px 10px;margin:0 -16px 16px;border-bottom:1px solid var(--line);
+    background:var(--bg-0);overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-inline:16px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;scroll-snap-align:center;min-height:44px;padding:8px 14px;margin-bottom:0;border-radius:999px;
+    border:1px solid var(--line);background:var(--panel);font-size:14px}
+  .tab:hover{background:#F1F5F9}
+  .tabOn{border-color:var(--cy);background:var(--cy-soft);color:#0B5F5A}
+
+  /* pills wrap, chips and option buttons get 44px targets */
+  .pill{white-space:normal;text-align:start}
+  .optionChip,.chip{min-height:44px;font-size:14px}
+  .chipX{width:28px;height:28px}
+  .chipsBox{padding:6px 8px}
+  .chipsBox input[type=text]{min-height:32px}
+
+  /* staff invite row stacks */
+  .inviteRow{flex-direction:column;align-items:stretch;padding:14px}
+  .inviteRow input,.inviteRow select{width:100%;min-width:0}
+}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}

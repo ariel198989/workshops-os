@@ -53,3 +53,25 @@
   .layout{grid-template-columns:1fr}
   .list{max-height:320px}
 }
+
+/* ---------- phone ---------- */
+@media (max-width:640px){
+  .tabs{overflow-x:auto;scrollbar-width:none;margin:0 -16px 16px;padding:0 16px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;min-height:44px;padding:10px 14px;white-space:nowrap}
+  .filters{gap:8px}
+  .filters input[type=search]{width:100%;flex:1 1 100%}
+  .filters select{flex:1 1 calc(50% - 4px);min-width:0;width:auto}
+  .filterCheck{min-height:44px;flex:1 1 auto}
+  .filterSpacer{display:none}
+  .filters>button{flex:1 1 auto}
+  .card{padding:12px;min-height:56px}
+  .cardTitle{overflow-wrap:anywhere}
+  .detail{padding:14px 14px 8px}
+  .detailBar button{flex:1 1 auto}
+  .placeholder{min-height:160px}
+  .tplGrid{grid-template-columns:1fr}
+  .tplCard{padding:14px}
+  .tplTitle{overflow-wrap:anywhere}
+  .tplNums{gap:14px;flex-wrap:wrap}
+}

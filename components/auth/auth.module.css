@@ -6,3 +6,8 @@
 .primaryLink{display:inline-flex;align-items:center;padding:8px 14px;border-radius:var(--radius);
   border:1px solid var(--cy);background:var(--cy);color:#fff;font-size:13px;font-weight:600;text-decoration:none}
 .primaryLink:hover{background:#12807A;border-color:#12807A;color:#fff;text-decoration:none}
+
+@media (max-width:640px){
+  .card{padding:24px 18px 20px}
+  .primaryLink{min-height:44px;font-size:14px;flex:1 1 auto;justify-content:center}
+}

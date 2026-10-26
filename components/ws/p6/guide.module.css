@@ -72,9 +72,17 @@
 .empty{color:var(--faint);font-size:14px}
 
 @media (max-width:700px){
-  .guide{font-size:14.5px}
-  .head h2{font-size:21px}
+  .guide{font-size:15px}
+  .head h2{font-size:clamp(19px,5.5vw,21px);overflow-wrap:anywhere}
   .exercise{padding:14px}
+}
+@media (max-width:640px){
+  .guide{padding:4px 0 32px}
+  .exHead{align-items:flex-start}
+  .exTitle{flex-basis:100%;overflow-wrap:anywhere}
+  .material label{min-height:44px}
+  .material input{width:20px;height:20px}
+  .agendaRow{grid-template-columns:44px minmax(0,1fr);gap:10px}
 }
 @media print{
   .guide{max-width:none}
