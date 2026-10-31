@@ -21,6 +21,8 @@ export interface Board {
   /** ws_groups rows (staff only): pin and share_token live here, not in the overview */
   groupRows: WsGroup[];
   patchGroupRow: (groupId: string, patch: Partial<WsGroup>) => void;
+  /** e.g. a rotated workshop number: the row is refetched only on a full reload */
+  patchWorkshop: (patch: Partial<WsWorkshop>) => void;
   drift: DriftEntry[];
   loading: boolean;
   error: string | null;
@@ -128,7 +130,12 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
     setGroupRows((rows) => rows.map((g) => (g.id === groupId ? { ...g, ...patch } : g)));
   }, []);
 
+  const patchWorkshop = useCallback((patch: Partial<WsWorkshop>) => {
+    setWorkshop((w) => (w ? { ...w, ...patch } : w));
+  }, []);
+
   return {
-    overview, workshop, people, subproblems, groupRows, patchGroupRow, drift, loading, error, refreshing, polling, refresh, move, resync,
+    overview, workshop, people, subproblems, groupRows, patchGroupRow, patchWorkshop, drift, loading, error, refreshing, polling,
+    refresh, move, resync,
   };
 }

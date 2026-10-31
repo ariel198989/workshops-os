@@ -43,6 +43,13 @@ export async function setWorkshopStatus(id: string, status: WorkshopStatus): Pro
   return data as WsWorkshop;
 }
 
+/** A fresh 4-digit workshop number (migration 0015); the old one stops working at once. Staff with edit rights only. */
+export async function rotateShortCode(id: string): Promise<string> {
+  const { data, error } = await sb.rpc('ws_rotate_short_code', { p_workshop: id });
+  if (error) throw error;
+  return data as string;
+}
+
 export async function fetchOverview(id: string): Promise<Overview> {
   const { data, error } = await sb.rpc('ws_workshop_overview', { p_workshop: id });
   if (error) throw error;

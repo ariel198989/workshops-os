@@ -2,8 +2,8 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { QrCode } from '@/components/ws/QrCode';
-import { SCAN_INSTRUCTION, SCAN_TITLE, fallbackLine } from '@/lib/ws/group-access';
-import { paginate, type EntryCard } from '@/lib/ws/entry-cards';
+import { SCAN_INSTRUCTION, SCAN_TITLE } from '@/lib/ws/group-access';
+import { cardFallbackLine, paginate, type EntryCard } from '@/lib/ws/entry-cards';
 
 export const CARD_QR_MM = 45;
 
@@ -44,7 +44,7 @@ function Card({ card }: { card: EntryCard }) {
         : <div className="p4-card-noqr">אין עדיין קישור סריקה. לחצו &quot;קישור חדש&quot; בלוח הקבוצות</div>}
       <p className="p4-card-line">{SCAN_INSTRUCTION}</p>
       <p className="p4-card-fallback">
-        {fallbackLine(card.code, card.number)} <span className="p4-card-pin" dir="ltr">{card.pin ?? '----'}</span>
+        {cardFallbackLine(card)} <span className="p4-card-pin" dir="ltr">{card.pin ?? '----'}</span>
       </p>
     </div>
   );

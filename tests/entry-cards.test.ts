@@ -58,3 +58,19 @@ test('paginate honours a custom page size and rejects zero', () => {
   assert.deepEqual(E.paginate([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
   assert.throws(() => E.paginate([1], 0));
 });
+
+test('entryCards carries the workshop number only when it is four digits; the fallback line starts with it', () => {
+  const [withNumber] = E.entryCards([group(3)], [row(3, '4821', TOKEN)], 'SDR-7', 'https://app.test', '1357');
+  assert.equal(withNumber.shortCode, '1357');
+  const line = E.cardFallbackLine(withNumber);
+  assert.ok(line.startsWith('מספר הסדנה: 1357'), line);
+  assert.ok(line.includes('קבוצה 3'));
+  assert.ok(!line.includes('SDR-7'));
+
+  const [withoutNumber] = E.entryCards([group(3)], [row(3, '4821', TOKEN)], 'SDR-7', 'https://app.test');
+  assert.equal(withoutNumber.shortCode, null);
+  assert.equal(E.cardFallbackLine(withoutNumber), 'אם אין מצלמה: קוד SDR-7, קבוצה 3, PIN');
+
+  const [malformed] = E.entryCards([group(3)], [], 'SDR-7', 'https://app.test', '13');
+  assert.equal(malformed.shortCode, null);
+});

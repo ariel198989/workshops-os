@@ -102,6 +102,9 @@ export interface WsWorkshop extends Stamped {
   audience_size: number | null; group_size: number; location: string | null; device_mode: DeviceMode;
   cycle_depth: CycleDepth; band: Band | null; tablets_count: number | null; sc_campaign_id: string | null;
   custom_fields: JsonObject; notes: string | null; created_by: string | null;
+  // migration 0015: 4-digit workshop number children type in the student app; set by the DB when the
+  // status becomes confirmed/live, null otherwise, rotated via ws_rotate_short_code (not client-updatable)
+  short_code: string | null;
 }
 export interface WsWorkshopStaff { workshop_id: string; user_id: string; role: WorkshopRole; created_at: string }
 export interface WsSession extends Stamped {

@@ -200,6 +200,12 @@
 /* ---------- projector: live step + class QR + count tiles ---------- */
 .projTop{display:flex;align-items:stretch;gap:20px;margin:0 0 20px}
 .projTop>.projLive{flex:1;margin:0}
+/* the workshop number: the one thing every child must read from their seat */
+.projNumber{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:16px 32px;
+  border-radius:var(--radius);background:var(--panel);border:2px solid var(--cy);box-shadow:var(--shadow-card);text-align:center}
+.projNumber span{font-size:clamp(18px,2.2vw,26px);font-weight:600;color:#0B5F5A}
+.projNumber b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:clamp(56px,9vw,120px);font-weight:700;
+  letter-spacing:.14em;line-height:1;color:var(--ink);unicode-bidi:isolate}
 .projQr{flex-shrink:0;padding:18px 24px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-card)}
 .projLive{margin:0 0 20px;padding:18px 24px;border-radius:var(--radius);background:var(--cy-soft);border:1px solid var(--cy)}
 .projLive b{display:block;font-size:clamp(28px,4.5vw,52px);font-weight:700;color:#0B5F5A;line-height:1.15}
@@ -225,6 +231,6 @@
   .scanBtns{flex-direction:column;align-items:stretch;width:100%}
   .scanBtns button{min-height:44px}
   .projTop{flex-direction:column}
-  .projQr{align-self:stretch}
+  .projQr,.projNumber{align-self:stretch}
   .projTiles{grid-template-columns:1fr}
 }

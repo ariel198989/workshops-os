@@ -94,17 +94,20 @@ export default function GroupsPage() {
   const isLive = overview?.workshop.status === 'live';
   const stamp = formatTime(overview?.generated_at);
   const count = defaultGroupCount(board.workshop?.audience_size ?? (people.length || null), overview?.workshop.group_size ?? board.workshop?.group_size ?? 4);
+  const shortCode = board.workshop?.short_code ?? null;
   const cards = useMemo(
-    () => (overview ? entryCards(groups, board.groupRows, overview.workshop.code, STUDENT_URL) : []),
-    [overview, groups, board.groupRows],
+    () => (overview ? entryCards(groups, board.groupRows, overview.workshop.code, STUDENT_URL, shortCode) : []),
+    [overview, groups, board.groupRows, shortCode],
   );
 
   return (
     <LoadGate loading={board.loading} error={board.error} hasData={!!overview} onRetry={() => void board.refresh()}>
       {overview && projector ? (
-        <ProjectorShell title={overview.workshop.title} stamp={stamp} live={liveHandle.live} onExit={() => setProjector(false)}
+        <ProjectorShell title={overview.workshop.title} stamp={stamp} live={liveHandle.live} number={shortCode} onExit={() => setProjector(false)}
           tools={<button type="button" aria-pressed={projectorQr} onClick={() => setProjectorQr((v) => !v)}>{projectorQr ? 'הסתרת QR' : 'הצגת QR'}</button>}
-          aside={projectorQr ? <WorkshopJoinQr code={overview.workshop.code} live={isLive} size={PROJECTOR_QR_SIZE} heading /> : null}>
+          aside={projectorQr
+            ? <WorkshopJoinQr code={overview.workshop.code} shortCode={shortCode} live={isLive} size={PROJECTOR_QR_SIZE} heading />
+            : null}>
           <ProjectorGroups groups={groups} />
         </ProjectorShell>
       ) : null}
@@ -118,7 +121,8 @@ export default function GroupsPage() {
                 {board.polling ? <><span className={styles.liveDot} aria-hidden="true" />מתעדכן כל {POLL_MS / 1000} שניות</> : 'רענון ידני'}
                 {stamp ? ` · עודכן ב-${stamp}` : ''}
               </span>
-              <JoinInfo code={overview.workshop.code} status={overview.workshop.status} />
+              <JoinInfo code={overview.workshop.code} shortCode={shortCode} status={overview.workshop.status}
+                workshopId={id} canRotate={canEdit} onRotated={(next) => board.patchWorkshop({ short_code: next })} />
             </div>
             <div className={styles.barEnd}>
               <button type="button" className="sm" onClick={() => void board.refresh()} disabled={board.refreshing}>רענון</button>

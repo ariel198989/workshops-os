@@ -3,8 +3,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { listEvents, eventLabel } from '@/lib/ws/events';
 import { CLASS_QR_TITLE } from '@/lib/ws/group-access';
-import { fetchOverview } from '@/lib/ws/workshops';
-import type { Overview, WsEvent } from '@/lib/ws/types';
+import { fetchOverview, getWorkshop } from '@/lib/ws/workshops';
+import type { Overview, WsEvent, WsWorkshop } from '@/lib/ws/types';
 import { Drawer } from '@/components/ws/Drawer';
 import { JoinInfo } from '@/components/ws/JoinInfo';
 import { WorkshopJoinQr } from '@/components/ws/WorkshopJoinQr';
@@ -15,15 +15,18 @@ import { formatDateTime, formatTime } from '@/components/ws/p4/format';
 import { useCanEdit, useLoader, useWorkshopId } from '@/components/ws/p4/hooks';
 import styles from '@/components/ws/p4/flow.module.css';
 
-interface OverviewData { overview: Overview; events: WsEvent[] }
+// the workshop row carries short_code (0015), which the overview RPC does not return
+interface OverviewData { overview: Overview; events: WsEvent[]; workshop: WsWorkshop }
 
 const EVENT_LIMIT = 20;
 const numberFmt = new Intl.NumberFormat('he-IL');
 
 async function loadAll(id: string): Promise<OverviewData> {
   // the feed is secondary: a failing events query must not hide the overview
-  const [overview, events] = await Promise.all([fetchOverview(id), listEvents(id, EVENT_LIMIT).catch(() => [])]);
-  return { overview, events };
+  const [overview, workshop, events] = await Promise.all([
+    fetchOverview(id), getWorkshop(id), listEvents(id, EVENT_LIMIT).catch(() => []),
+  ]);
+  return { overview, events, workshop };
 }
 
 function StatRow({ totals }: { totals: Overview['totals'] }) {
@@ -81,7 +84,7 @@ export default function OverviewPage() {
           </div>
 
           <Drawer open={classQr} title={CLASS_QR_TITLE} onClose={() => setClassQr(false)}>
-            <WorkshopJoinQr code={overview.workshop.code} live={overview.workshop.status === 'live'} />
+            <WorkshopJoinQr code={overview.workshop.code} shortCode={data.workshop.short_code} live={overview.workshop.status === 'live'} />
           </Drawer>
 
           <StatRow totals={overview.totals} />
@@ -89,7 +92,8 @@ export default function OverviewPage() {
           {overview.totals.members === 0 ? (
             <div className={styles.warn} role="status">
               <span>עדיין אין תלמידים בקבוצות. תלמידים מצטרפים באפליקציית התלמידים עם קוד הסדנה.</span>
-              <JoinInfo code={overview.workshop.code} status={overview.workshop.status} />
+              <JoinInfo code={overview.workshop.code} shortCode={data.workshop.short_code} status={overview.workshop.status}
+                workshopId={id} canRotate={canEdit} onRotated={() => void reload()} />
             </div>
           ) : null}
 

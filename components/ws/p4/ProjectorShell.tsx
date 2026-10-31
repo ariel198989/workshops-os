@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { LiveState } from '@/lib/ws/live';
+import { NUMBER_LABEL, isWorkshopNumber } from '@/lib/ws/workshop-number';
 import styles from './board.module.css';
 
 interface ProjectorShellProps {
@@ -12,12 +13,14 @@ interface ProjectorShellProps {
   tools?: ReactNode;
   /** shown beside the live label (the class join QR) */
   aside?: ReactNode;
+  /** the 4-digit workshop number; always projected large so children can read it from their seats */
+  number?: string | null;
   onExit: () => void;
   children: ReactNode;
 }
 
 /** Full-screen overlay for projecting the board to the class. Esc or the exit button leaves. */
-export function ProjectorShell({ title, stamp, live = null, tools, aside, onExit, children }: ProjectorShellProps) {
+export function ProjectorShell({ title, stamp, live = null, tools, aside, number = null, onExit, children }: ProjectorShellProps) {
   const exitRef = useRef(onExit);
   useEffect(() => {
     exitRef.current = onExit;
@@ -42,6 +45,7 @@ export function ProjectorShell({ title, stamp, live = null, tools, aside, onExit
   }, []);
 
   const hasLive = !!live && (!!live.label || !!live.message);
+  const hasNumber = isWorkshopNumber(number);
   return (
     <div className={styles.projector} role="dialog" aria-label="מצב מקרן">
       <div className={styles.projHead}>
@@ -52,8 +56,14 @@ export function ProjectorShell({ title, stamp, live = null, tools, aside, onExit
           <button type="button" onClick={onExit}>יציאה ממצב מקרן</button>
         </div>
       </div>
-      {hasLive || aside ? (
+      {hasNumber || hasLive || aside ? (
         <div className={styles.projTop}>
+          {hasNumber ? (
+            <div className={styles.projNumber} role="status" aria-label={`${NUMBER_LABEL} ${number}`}>
+              <span>{NUMBER_LABEL}</span>
+              <b dir="ltr">{number}</b>
+            </div>
+          ) : null}
           {hasLive ? (
             <div className={styles.projLive} role="status">
               {live.label ? <b>{live.label}</b> : null}

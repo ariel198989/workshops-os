@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { StatusPill } from '@/components/ws/StatusPill';
 import { TabStrip, type TabItem } from '@/components/ws/TabStrip';
 import { WorkshopPills } from '@/components/ws/p3/BandPills';
+import { WorkshopNumberPill } from '@/components/ws/p3/WorkshopNumberPill';
 import { WorkshopStatusBar } from '@/components/ws/p3/WorkshopStatusBar';
 import styles from '@/components/ws/p3/p3.module.css';
 import { bumpData, dataVersion, toast, useStore } from '@/lib/store';
@@ -92,6 +93,7 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
                 <span className={styles.code}>{workshop.code}</span>
                 <StatusPill kind="workshop" value={workshop.status} />
                 <WorkshopPills band={workshop.band} depth={workshop.cycle_depth} device={workshop.device_mode} />
+                <WorkshopNumberPill shortCode={workshop.short_code} status={workshop.status} />
               </div>
             </>
           )}
