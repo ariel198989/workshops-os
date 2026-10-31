@@ -31,5 +31,12 @@ export async function updateGroup(id: string, patch: GroupPatch): Promise<WsGrou
   return data as WsGroup;
 }
 
+// pin is not client-updatable (0013): a new 4-digit PIN comes only from this RPC (ws_can_edit_workshop).
+export async function rotateGroupPin(groupId: string): Promise<string> {
+  const { data, error } = await sb.rpc('ws_rotate_group_pin', { p_group: groupId });
+  if (error) throw error;
+  return data as string;
+}
+
 // The two sc_* team keys of a group: the team itself and its personal variant.
 export const teamNames = (team: string): [string, string] => [team, 'אישי · ' + team];

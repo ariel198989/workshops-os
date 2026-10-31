@@ -69,6 +69,13 @@ test('buildCertificateModel fills texts from the snapshot', () => {
   assert.equal(m.datesRange, '11 באוקטובר 2026 - 18 באוקטובר 2026');
   assert.equal(m.subproblem, 'זיהוי מכשולים');
   assert.equal(m.revoked, false);
+  // the snapshot has no share_token: without one there is no take-home QR
+  assert.equal(m.takeHomeUrl, null);
+});
+
+test('buildCertificateModel builds the take-home url from a passed share token', () => {
+  const m = T.buildCertificateModel(cert, 'standard', 'https://x.app', 'abc234xyz789');
+  assert.match(m.takeHomeUrl ?? '', /\/model\/abc234xyz789$/);
 });
 
 test('buildCertificateModel tolerates a sparse snapshot', () => {

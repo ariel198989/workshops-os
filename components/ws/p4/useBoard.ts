@@ -1,10 +1,11 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/lib/store';
+import { listGroups } from '@/lib/ws/groups';
 import { listParticipants, moveParticipant, reconcile, type ParticipantWithGroup } from '@/lib/ws/participants';
 import { usePolling } from '@/lib/ws/poll';
 import { fetchOverview, getWorkshop, listSubproblems } from '@/lib/ws/workshops';
-import type { DriftEntry, Overview, WsSubproblem, WsWorkshop } from '@/lib/ws/types';
+import type { DriftEntry, Overview, WsGroup, WsSubproblem, WsWorkshop } from '@/lib/ws/types';
 import { applyMove } from './drag';
 import { errorText } from './hooks';
 
@@ -17,6 +18,9 @@ export interface Board {
   workshop: WsWorkshop | null;
   people: ParticipantWithGroup[];
   subproblems: WsSubproblem[];
+  /** ws_groups rows (staff only): pin and share_token live here, not in the overview */
+  groupRows: WsGroup[];
+  patchGroupRow: (groupId: string, patch: Partial<WsGroup>) => void;
   drift: DriftEntry[];
   loading: boolean;
   error: string | null;
@@ -37,6 +41,7 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
   const [workshop, setWorkshop] = useState<WsWorkshop | null>(null);
   const [people, setPeople] = useState<ParticipantWithGroup[]>([]);
   const [subproblems, setSubproblems] = useState<WsSubproblem[]>([]);
+  const [groupRows, setGroupRows] = useState<WsGroup[]>([]);
   const [drift, setDrift] = useState<DriftEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,9 +63,13 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
         toast(errorText(err, 'סנכרון המשתתפים נכשל'));
       }
     }
-    const [ov, ppl] = await Promise.all([fetchOverview(workshopId), listParticipants(workshopId)]);
+    // the rows carry the PINs; a failing read keeps the previous rows instead of hiding the board
+    const [ov, ppl, rows] = await Promise.all([
+      fetchOverview(workshopId), listParticipants(workshopId), listGroups(workshopId).catch(() => null),
+    ]);
     setOverview(ov);
     setPeople(ppl);
+    if (rows) setGroupRows(rows);
     setError(null);
     loadedAt.current = Date.now();
   }, [workshopId, canEdit]);
@@ -115,5 +124,11 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
     if (groupId) await move(participantId, groupId, true);
   }, [move]);
 
-  return { overview, workshop, people, subproblems, drift, loading, error, refreshing, polling, refresh, move, resync };
+  const patchGroupRow = useCallback((groupId: string, patch: Partial<WsGroup>) => {
+    setGroupRows((rows) => rows.map((g) => (g.id === groupId ? { ...g, ...patch } : g)));
+  }, []);
+
+  return {
+    overview, workshop, people, subproblems, groupRows, patchGroupRow, drift, loading, error, refreshing, polling, refresh, move, resync,
+  };
 }

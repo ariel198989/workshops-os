@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { CustomFieldsCard } from '@/components/ws/p3/CustomFieldsCard';
 import { withFriendlyError } from '@/components/ws/p3/db-errors';
+import { PurgeMediaCard } from '@/components/ws/p3/PurgeMediaCard';
 import { WorkshopFields } from '@/components/ws/p3/WorkshopFields';
 import { WorkshopStaffPanel } from '@/components/ws/p3/WorkshopStaffPanel';
 import { bumpData, useStore } from '@/lib/store';
@@ -47,6 +48,7 @@ export default function Page() {
       <CustomFieldsCard entity="workshop" organizationId={workshop.organization_id} value={workshop.custom_fields}
         disabled={!editable}
         onSave={async (custom_fields) => saved(await withFriendlyError(() => updateWorkshop(id, { custom_fields })))} />
+      <PurgeMediaCard workshopId={id} status={workshop.status} admin={admin} />
     </>
   );
 }

@@ -1,16 +1,19 @@
 'use client';
 import { useEffect, useRef, type ReactNode } from 'react';
+import type { LiveState } from '@/lib/ws/live';
 import styles from './board.module.css';
 
 interface ProjectorShellProps {
   title: string;
   stamp: string | null;
+  /** the facilitator's current step, shown large above the groups */
+  live?: LiveState | null;
   onExit: () => void;
   children: ReactNode;
 }
 
 /** Full-screen overlay for projecting the board to the class. Esc or the exit button leaves. */
-export function ProjectorShell({ title, stamp, onExit, children }: ProjectorShellProps) {
+export function ProjectorShell({ title, stamp, live = null, onExit, children }: ProjectorShellProps) {
   const exitRef = useRef(onExit);
   useEffect(() => {
     exitRef.current = onExit;
@@ -43,7 +46,13 @@ export function ProjectorShell({ title, stamp, onExit, children }: ProjectorShel
           <button type="button" onClick={onExit}>יציאה ממצב מקרן</button>
         </div>
       </div>
-      <div className={styles.projGrid}>{children}</div>
+      {live && (live.label || live.message) ? (
+        <div className={styles.projLive} role="status">
+          {live.label ? <b>{live.label}</b> : null}
+          {live.message ? <span>{live.message}</span> : null}
+        </div>
+      ) : null}
+      <div>{children}</div>
     </div>
   );
 }

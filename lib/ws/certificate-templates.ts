@@ -1,4 +1,5 @@
 import { CERTIFICATE_VARIANTS, type CertificateData, type CertificateVariant } from './certificates';
+import { takeHomeUrl } from './group-access';
 import type { WorkshopFormat, WsCertificate } from './types';
 
 // Copy of curriculum.json certificate.variants (certificate_he_v1), split into fields so the
@@ -102,6 +103,8 @@ export interface CertificateModel {
   subproblem: string | null;
   certificateNo: string;
   verifyUrl: string;
+  /** public take-home page of the participant's group; null when the group or its token is unknown */
+  takeHomeUrl: string | null;
   revoked: boolean;
 }
 
@@ -115,8 +118,13 @@ function datesRange(data: WsCertificate['data']): string | null {
   return from || to || null;
 }
 
-/** Everything the print layout needs, derived from the certificate row snapshot. Pure. */
-export function buildCertificateModel(cert: WsCertificate, variant: CertificateVariant, origin: string): CertificateModel {
+/**
+ * Everything the print layout needs, derived from the certificate row snapshot. Pure.
+ * The snapshot has no share_token: the caller looks the group's token up (certs-data) and passes it in.
+ */
+export function buildCertificateModel(
+  cert: WsCertificate, variant: CertificateVariant, origin: string, shareToken: string | null = null,
+): CertificateModel {
   const copy = VARIANT_COPY[variant];
   const values: CertificateData = {
     student: cert.recipient_name,
@@ -145,6 +153,7 @@ export function buildCertificateModel(cert: WsCertificate, variant: CertificateV
     subproblem: str(cert.data.subproblem) || null,
     certificateNo: cert.certificate_no,
     verifyUrl: buildVerifyUrl(origin, cert.verify_code),
+    takeHomeUrl: shareToken ? takeHomeUrl(shareToken) : null,
     revoked: cert.status === 'revoked',
   };
 }

@@ -6,6 +6,7 @@ import type { ParticipantWithGroup } from '@/lib/ws/participants';
 import type { GroupPatch, OverviewGroup, TaskType, WsSubproblem } from '@/lib/ws/types';
 import { CoverageList } from './CoverageList';
 import { MEMBER_MIME, parseMemberDrag } from './drag';
+import { GroupAccess, type GroupAccessActions } from './GroupAccess';
 import { MemberChip, StatusLines, TeamChip } from './GroupCardParts';
 import { moveTargets } from './groups-utils';
 import { ReadinessBar } from './ReadinessBar';
@@ -25,6 +26,8 @@ interface GroupCardProps {
   canEdit: boolean;
   /** big-type read-only rendering for the classroom projector */
   projector?: boolean;
+  /** tablet sign-in (PIN) and take-home link block; omitted on the projector */
+  access?: GroupAccessActions;
   onMove: (participantId: string, groupId: string | null) => void;
   onPatch: (groupId: string, patch: GroupPatch) => Promise<void>;
 }
@@ -47,7 +50,7 @@ function SubproblemLine({ group, subproblems, editable, onPatch }: {
 }
 
 export function GroupCard({
-  group, members, subproblems, allGroups, canEdit, projector = false, onMove, onPatch,
+  group, members, subproblems, allGroups, canEdit, projector = false, access, onMove, onPatch,
 }: GroupCardProps) {
   const [over, setOver] = useState(false);
   const editable = canEdit && !projector;
@@ -82,6 +85,9 @@ export function GroupCard({
       </header>
 
       <TeamChip name={group.team_name} copyable={!projector} />
+      {access && !projector ? (
+        <GroupAccess groupId={group.group_id} number={group.number} displayName={group.display_name} canEdit={canEdit} {...access} />
+      ) : null}
       <SubproblemLine group={group} subproblems={subproblems} editable={editable} onPatch={patch} />
 
       <dl className={styles.facts}>

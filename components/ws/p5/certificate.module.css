@@ -22,3 +22,7 @@
 .no{font-weight:600;color:#0F1C2E}
 .revoked{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;
   font-size:110pt;font-weight:800;color:rgba(220,38,38,.16);transform:rotate(-18deg)}
+/* take-home QR, bottom corner (left in RTL = the far corner), 22 mm as requested */
+.homeQr{position:absolute;left:11mm;bottom:9mm;width:40mm;display:flex;flex-direction:column;align-items:center;gap:1.2mm}
+.homeQr svg{width:22mm;height:22mm}
+.homeQrCap{font-size:7pt;line-height:1.3;color:#334155;text-align:center}

@@ -26,6 +26,13 @@ export async function loadCertificatesData(workshopId: string): Promise<Certific
   return { head, participants, sessions, attendance, groups, deliverables, certificates };
 }
 
+/** share_token of the participant's group (ws_groups, staff read), for the take-home QR on the printed certificate. */
+export function shareTokenFor(data: CertificatesData, participantId: string): string | null {
+  const groupId = data.participants.find((p) => p.id === participantId)?.group_id;
+  if (!groupId) return null;
+  return data.groups.find((g) => g.id === groupId)?.share_token ?? null;
+}
+
 /** demo_score of the participant's group, used to suggest the distinction variant. */
 export function demoScoreFor(data: CertificatesData, participantId: string): number | null {
   const groupId = data.participants.find((p) => p.id === participantId)?.group_id;

@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { Drawer } from '@/components/ws/Drawer';
 import { CertificatePreview } from '@/components/ws/p5/CertificatePreview';
-import { demoScoreFor, loadCertificatesData } from '@/components/ws/p5/certs-data';
+import { demoScoreFor, loadCertificatesData, shareTokenFor } from '@/components/ws/p5/certs-data';
 import { EligibilityPanel } from '@/components/ws/p5/EligibilityPanel';
 import { IssueResultTable } from '@/components/ws/p5/IssueResultTable';
 import { IssuedList } from '@/components/ws/p5/IssuedList';
@@ -42,7 +42,7 @@ export default function CertificatesPage() {
 
   const variants = { ...suggested, ...chosen };
   const model = (c: WsCertificate): CertificateModel =>
-    buildCertificateModel(c, variants[c.id] ?? 'standard', window.location.origin);
+    buildCertificateModel(c, variants[c.id] ?? 'standard', window.location.origin, shareTokenFor(data, c.participant_id));
   const active = data.certificates.filter((c) => c.status === 'issued');
 
   return (
