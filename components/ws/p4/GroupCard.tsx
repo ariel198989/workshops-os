@@ -7,6 +7,7 @@ import type { GroupPatch, OverviewGroup, TaskType, WsSubproblem } from '@/lib/ws
 import { CoverageList } from './CoverageList';
 import { MEMBER_MIME, parseMemberDrag } from './drag';
 import { MemberChip, StatusLines, TeamChip } from './GroupCardParts';
+import { moveTargets } from './groups-utils';
 import { ReadinessBar } from './ReadinessBar';
 import { tierLabel } from './readiness';
 import styles from './board.module.css';
@@ -19,10 +20,12 @@ interface GroupCardProps {
   group: OverviewGroup;
   members: readonly ParticipantWithGroup[];
   subproblems: readonly WsSubproblem[];
+  /** every group on the board, for the phone "העברה ל..." select */
+  allGroups: readonly OverviewGroup[];
   canEdit: boolean;
   /** big-type read-only rendering for the classroom projector */
   projector?: boolean;
-  onMove: (participantId: string, groupId: string) => void;
+  onMove: (participantId: string, groupId: string | null) => void;
   onPatch: (groupId: string, patch: GroupPatch) => Promise<void>;
 }
 
@@ -43,9 +46,12 @@ function SubproblemLine({ group, subproblems, editable, onPatch }: {
   );
 }
 
-export function GroupCard({ group, members, subproblems, canEdit, projector = false, onMove, onPatch }: GroupCardProps) {
+export function GroupCard({
+  group, members, subproblems, allGroups, canEdit, projector = false, onMove, onPatch,
+}: GroupCardProps) {
   const [over, setOver] = useState(false);
   const editable = canEdit && !projector;
+  const targets = moveTargets(allGroups, group.group_id);
   // the server's readiness is the worst class (min tagged), same thresholds as ReadinessBar
   const tier = group.readiness === 'no_targets' ? null : group.readiness;
   const linked = members.filter((m) => m.user_id !== null).length;
@@ -95,7 +101,9 @@ export function GroupCard({ group, members, subproblems, canEdit, projector = fa
         <p className={styles.people}>{members.length} חברים, {linked} מחוברים לאפליקציית התלמידים</p>
         <div className={styles.members}>
           {members.length === 0 ? <span className={styles.emptyMembers}>{editable ? 'גררו לכאן תלמידים' : 'אין חברים'}</span> : null}
-          {members.map((m) => <MemberChip key={m.id} person={m} draggable={editable} />)}
+          {members.map((m) => (
+            <MemberChip key={m.id} person={m} draggable={editable} targets={targets} onMoveTo={(gid) => onMove(m.id, gid)} />
+          ))}
         </div>
       </div>
     </article>

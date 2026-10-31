@@ -5,6 +5,8 @@ import { toast } from '@/lib/store';
 import type { ParticipantWithGroup } from '@/lib/ws/participants';
 import type { OverviewGroup } from '@/lib/ws/types';
 import { MEMBER_MIME, encodeMemberDrag } from './drag';
+import type { MoveTarget } from './groups-utils';
+import { MemberMoveSelect } from './MemberMove';
 import { formatAccuracy } from './readiness';
 import styles from './board.module.css';
 
@@ -29,9 +31,12 @@ export function TeamChip({ name, copyable }: { name: string; copyable: boolean }
 interface MemberChipProps {
   person: ParticipantWithGroup;
   draggable: boolean;
+  /** with onMoveTo: a "העברה ל..." select shown on coarse pointers next to the chip */
+  targets?: readonly MoveTarget[];
+  onMoveTo?: (groupId: string | null) => void;
 }
 
-export function MemberChip({ person, draggable }: MemberChipProps) {
+export function MemberChip({ person, draggable, targets, onMoveTo }: MemberChipProps) {
   const [dragging, setDragging] = useState(false);
   const onStart = (e: DragEvent) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -39,12 +44,19 @@ export function MemberChip({ person, draggable }: MemberChipProps) {
     setDragging(true);
   };
   const linked = person.user_id !== null;
-  return (
+  const chip = (
     <span className={`${styles.member} ${draggable ? '' : styles.memberStatic} ${dragging ? styles.memberDragging : ''}`}
       draggable={draggable} onDragStart={draggable ? onStart : undefined} onDragEnd={() => setDragging(false)}
       title={linked ? 'מחובר/ת לאפליקציית התלמידים' : 'עדיין לא נרשם/ה באפליקציית התלמידים'}>
       <span className={linked ? styles.linked : styles.unlinked} aria-hidden="true" />
       {person.full_name}
+    </span>
+  );
+  if (!draggable || !onMoveTo || !targets) return chip;
+  return (
+    <span className={styles.memberWrap}>
+      {chip}
+      <MemberMoveSelect name={person.full_name} targets={targets} onMove={onMoveTo} />
     </span>
   );
 }

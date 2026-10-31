@@ -59,7 +59,7 @@ export default function GroupsPage() {
 
   const cards = (big: boolean) => groups.map((g) => (
     <GroupCard key={g.group_id} group={g} members={byGroup.get(g.group_id) ?? []} subproblems={board.subproblems}
-      canEdit={canEdit} projector={big} onMove={(pid, gid) => void board.move(pid, gid)} onPatch={patchGroup} />
+      allGroups={groups} canEdit={canEdit} projector={big} onMove={(pid, gid) => void board.move(pid, gid)} onPatch={patchGroup} />
   ));
 
   return (
@@ -102,7 +102,7 @@ export default function GroupsPage() {
               actions={canEdit ? <CreateGroupsForm workshopId={id} defaultCount={count} existing={0} onCreated={() => void board.refresh()} /> : undefined} />
           ) : (
             <>
-              <UnassignedTray people={unassigned} canEdit={canEdit} onMove={(pid, gid) => void board.move(pid, gid)} />
+              <UnassignedTray people={unassigned} groups={groups} canEdit={canEdit} onMove={(pid, gid) => void board.move(pid, gid)} />
               <div className={styles.grid}>{cards(false)}</div>
             </>
           )}

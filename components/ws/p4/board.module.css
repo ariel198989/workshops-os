@@ -90,6 +90,12 @@
 .memberStatic{cursor:default}
 .memberStatic:hover{background:#F1F5F9}
 .memberDragging{opacity:.4}
+/* phone fallback for drag and drop: a move select beside the chip, shown only on coarse pointers */
+.memberWrap{display:inline-flex;align-items:center;gap:.3em;max-width:100%}
+.moveSel{display:none}
+@media (pointer:coarse){
+  .moveSel{display:inline-block;width:auto;min-width:0;max-width:9em;font-size:.95em;padding:.25em .5em;min-height:36px}
+}
 .linked{width:.55em;height:.55em;border-radius:50%;background:var(--cy);flex-shrink:0}
 .unlinked{width:.55em;height:.55em;border-radius:50%;border:1px solid #94A3B8;flex-shrink:0}
 .emptyMembers{color:var(--faint);font-size:.95em}

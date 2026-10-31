@@ -24,3 +24,16 @@ export function parseRoster(text: string): string[] {
 
 export const hasInactiveGroups = (groups: readonly { activated: boolean }[]): boolean =>
   groups.some((g) => !g.activated);
+
+// ── phone move select (fallback for drag and drop) ────────────────────
+export interface MoveTarget { id: string | null; label: string }
+interface GroupLike { group_id: string; number: number; display_name: string | null }
+
+export const UNASSIGNED_LABEL = 'בלי קבוצה';
+export const groupLabel = (g: GroupLike): string => `קבוצה ${g.number}${g.display_name ? `: ${g.display_name}` : ''}`;
+
+/** Every other group in board order, then "בלי קבוצה" for a student who currently has a group. */
+export function moveTargets(groups: readonly GroupLike[], currentGroupId: string | null): MoveTarget[] {
+  const others = groups.filter((g) => g.group_id !== currentGroupId).map((g) => ({ id: g.group_id, label: groupLabel(g) }));
+  return currentGroupId === null ? others : [...others, { id: null, label: UNASSIGNED_LABEL }];
+}

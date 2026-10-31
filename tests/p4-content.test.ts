@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseNotes, exerciseSteps, materialLabel, textList } from '../components/ws/p4/notes.ts';
-import { defaultGroupCount, parseRoster, hasInactiveGroups } from '../components/ws/p4/groups-utils.ts';
+import { defaultGroupCount, parseRoster, hasInactiveGroups, moveTargets, UNASSIGNED_LABEL } from '../components/ws/p4/groups-utils.ts';
 
 test('parseNotes splits "── title ──" markers into headed sections', () => {
   const text = 'פתיח קצר\n── סדר יום ──\n10 דקות הקדמה\n20 דקות תרגול\n── טיפים ──\nלעצור לשאלות';
@@ -42,6 +42,21 @@ test('materialLabel accepts strings and {label} objects', () => {
 test('textList keeps only non-empty strings', () => {
   assert.deepEqual(textList(['א', '', 3, ' ב ', null]), ['א', 'ב']);
   assert.deepEqual(textList('not an array'), []);
+});
+
+test('moveTargets lists every other group in order and offers "בלי קבוצה" only to a grouped student', () => {
+  const groups = [
+    { group_id: 'g1', number: 1, display_name: null },
+    { group_id: 'g2', number: 2, display_name: 'הנמרים' },
+    { group_id: 'g3', number: 3, display_name: null },
+  ];
+  assert.deepEqual(moveTargets(groups, 'g2'), [
+    { id: 'g1', label: 'קבוצה 1' }, { id: 'g3', label: 'קבוצה 3' }, { id: null, label: UNASSIGNED_LABEL },
+  ]);
+  assert.deepEqual(moveTargets(groups, null).map((t) => t.id), ['g1', 'g2', 'g3']);
+  assert.deepEqual(moveTargets(groups, null)[1].label, 'קבוצה 2: הנמרים');
+  assert.deepEqual(moveTargets([groups[0]], 'g1'), [{ id: null, label: UNASSIGNED_LABEL }]);
+  assert.deepEqual(moveTargets([], null), []);
 });
 
 test('defaultGroupCount = ceil(audience / group size), at least 1, within 1..40', () => {

@@ -22,7 +22,7 @@ function applyOrder(rows: readonly WsSessionModule[], ids: readonly string[]): W
   return withPositions(ids.flatMap((id) => byId.get(id) ?? []));
 }
 
-/** Modules of one meeting: status chips, drag reorder (Alt+arrows too), click opens the content drawer. */
+/** Modules of one meeting: status chips, drag reorder (Alt+arrows and the arrow buttons too), click opens the content drawer. */
 export function SessionModules({ sessionId, canEdit, onOpen }: SessionModulesProps) {
   const [rows, setRows] = useState<WsSessionModule[] | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -68,12 +68,17 @@ export function SessionModules({ sessionId, canEdit, onOpen }: SessionModulesPro
     void reorder(reorderIds(rows.map((m) => m.id), from, targetId));
   };
 
-  const onKey = (e: KeyboardEvent, index: number) => {
-    if (!canEdit || !rows || !e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
-    const target = rows[index + (e.key === 'ArrowUp' ? -1 : 1)];
-    if (!target) return;
-    e.preventDefault();
+  // swaps the module with its neighbour (-1 up, +1 down); shared by Alt+arrows and the arrow buttons
+  const nudge = (index: number, dir: -1 | 1) => {
+    const target = rows?.[index + dir];
+    if (!rows || !target) return;
     void reorder(reorderIds(rows.map((m) => m.id), rows[index].id, target.id));
+  };
+
+  const onKey = (e: KeyboardEvent, index: number) => {
+    if (!canEdit || !e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    e.preventDefault();
+    nudge(index, e.key === 'ArrowUp' ? -1 : 1);
   };
 
   if (rows === null) return <p className="hint">טוען מודולים</p>;
@@ -94,6 +99,14 @@ export function SessionModules({ sessionId, canEdit, onOpen }: SessionModulesPro
             <span className={styles.modTitle}>{m.title}</span>
             <span className={styles.modMeta}>{m.duration_minutes} דקות</span>
           </button>
+          {canEdit ? (
+            <span className={styles.modTools}>
+              <button type="button" className="ghost sm" aria-label={`העלאה: ${m.title}`} disabled={index === 0}
+                onClick={() => nudge(index, -1)}>▲</button>
+              <button type="button" className="ghost sm" aria-label={`הורדה: ${m.title}`} disabled={index === rows.length - 1}
+                onClick={() => nudge(index, 1)}>▼</button>
+            </span>
+          ) : null}
           <span className={styles.chips} role="group" aria-label={`סטטוס: ${m.title}`}>
             {MODULE_RUN_STATUSES.map((st) => {
               const on = m.status === st;
