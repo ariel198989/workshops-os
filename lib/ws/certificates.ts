@@ -1,5 +1,4 @@
 import { sb } from '../db';
-import { authedPost } from './staff';
 import type { IssueResult, VerifyResult, WsCertificate } from './types';
 
 export async function listCertificates(workshopId: string): Promise<WsCertificate[]> {
@@ -35,9 +34,6 @@ export async function verifyCertificate(code: string): Promise<VerifyResult | nu
   if (error) throw error;
   return (data as VerifyResult | null) ?? null;
 }
-
-export const requestPdf = (certificateId: string): Promise<{ pdf_path: string }> =>
-  authedPost<{ pdf_path: string }>(`/api/certificates/${encodeURIComponent(certificateId)}/pdf`);
 
 const SIGNED_URL_TTL_SECONDS = 600;
 
