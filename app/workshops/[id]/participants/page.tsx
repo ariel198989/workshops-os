@@ -11,7 +11,7 @@ import { getWorkshop } from '@/lib/ws/workshops';
 import {
   listParticipants, moveParticipant, updateParticipant, type ParticipantWithGroup,
 } from '@/lib/ws/participants';
-import type { ParticipantPatch, WsGroup } from '@/lib/ws/types';
+import type { ParticipantPatch, WorkshopStatus, WsGroup } from '@/lib/ws/types';
 import { LinkPicker } from '@/components/ws/p4/LinkPicker';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
 import { RosterPaste } from '@/components/ws/p4/RosterPaste';
@@ -19,7 +19,7 @@ import { linkCandidates } from '@/components/ws/p4/link-utils';
 import { errorText, useCanEdit, useLoader, useWorkshopId } from '@/components/ws/p4/hooks';
 import styles from '@/components/ws/p4/people.module.css';
 
-interface Data { rows: ParticipantWithGroup[]; groups: WsGroup[]; code: string }
+interface Data { rows: ParticipantWithGroup[]; groups: WsGroup[]; code: string; status: WorkshopStatus }
 
 const SOURCE_LABELS = { roster: 'רשימה', signup: 'הרשמה באפליקציית התלמידים', manual: 'ידני' } as const;
 const CONSENT_OPTIONS: readonly InlineOption[] = [
@@ -35,7 +35,7 @@ export default function ParticipantsPage() {
   const { data, error, loading, reload, setData } = useLoader<Data>(
     async () => {
       const [rows, groups, workshop] = await Promise.all([listParticipants(id), listGroups(id), getWorkshop(id)]);
-      return { rows, groups, code: workshop.code };
+      return { rows, groups, code: workshop.code, status: workshop.status };
     }, id);
   const [query, setQuery] = useState('');
   const [showWithdrawn, setShowWithdrawn] = useState(false);
@@ -116,7 +116,7 @@ export default function ParticipantsPage() {
         <div>
           <h2>משתתפים</h2>
           <span className={styles.summary}>{activeCount} פעילים, {linked} מחוברים לאפליקציית התלמידים</span>
-          {data ? <div><JoinInfo code={data.code} /></div> : null}
+          {data ? <div><JoinInfo code={data.code} status={data.status} /></div> : null}
         </div>
         <div className={styles.tools}>
           <input type="search" placeholder="חיפוש לפי שם" aria-label="חיפוש לפי שם" value={query} onChange={(e) => setQuery(e.target.value)} />

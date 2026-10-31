@@ -38,14 +38,19 @@ test('validateCode enforces ^[A-Z0-9][A-Z0-9-]{2,19}$', () => {
   assert.notEqual(U.validateCode(''), null);
 });
 
-test('suggestCode builds a valid code from org name and start date', () => {
-  assert.equal(U.suggestCode('Ofek School', '2026-11-03'), 'OFEK-2611');
-  assert.equal(U.suggestCode('אופק', '2026-11-03'), 'WS-2611');
-  assert.equal(U.suggestCode('Ofek', ''), 'OFEK-NEW');
-  assert.equal(U.suggestCode('', null), 'WS-NEW');
-  for (const name of ['Ofek School', 'אופק', '', 'A', 'x'.repeat(40)]) {
-    assert.equal(U.validateCode(U.suggestCode(name, '2027-01-09')), null, name);
+test('randomCode is XXXX-XXXX from the unambiguous alphabet and always valid', () => {
+  assert.equal(U.CODE_ALPHABET.length, 32);
+  for (const ch of ['0', '1', 'I', 'O']) assert.ok(!U.CODE_ALPHABET.includes(ch), ch);
+  const seen = new Set<string>();
+  for (let i = 0; i < 200; i += 1) {
+    const code = U.randomCode();
+    assert.equal(code.length, 9);
+    assert.match(code, /^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    for (const ch of code.replace('-', '')) assert.ok(U.CODE_ALPHABET.includes(ch), code);
+    assert.equal(U.validateCode(code), null, code);
+    seen.add(code);
   }
+  assert.ok(seen.size > 190, 'codes are not predictable');
 });
 
 // ── team prefix ───────────────────────────────────────────────────────
@@ -87,15 +92,20 @@ test('pickDefaultTemplate prefers the default template of the chosen format', ()
 });
 
 // ── first session ─────────────────────────────────────────────────────
-test('firstSessionIso returns an ISO instant at 16:00 local, or null', () => {
+test('firstSessionIso is 16:00 Asia/Jerusalem regardless of the process zone (winter and summer)', () => {
   assert.equal(U.firstSessionIso(''), null);
   assert.equal(U.firstSessionIso(null), null);
   assert.equal(U.firstSessionIso('not-a-date'), null);
-  const iso = U.firstSessionIso('2026-11-03');
-  assert.ok(iso);
-  const d = new Date(iso);
-  assert.equal(d.getHours(), 16);
-  assert.equal(d.getDate(), 3);
+  assert.equal(U.firstSessionIso('2026-11-03T10:00'), null);
+  assert.equal(U.WORKSHOP_TIME_ZONE, 'Asia/Jerusalem');
+  // IST is UTC+2 in November, IDT is UTC+3 in July
+  assert.equal(U.firstSessionIso('2026-11-03'), '2026-11-03T14:00:00.000Z');
+  assert.equal(U.firstSessionIso('2026-07-01'), '2026-07-01T13:00:00.000Z');
+  // the day Israel leaves DST (last Sunday of October 2026) still lands on 16:00 wall-clock
+  assert.equal(U.firstSessionIso('2026-10-25'), '2026-10-25T14:00:00.000Z');
+  const wall = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jerusalem', hour: '2-digit', hourCycle: 'h23' })
+    .format(new Date(U.firstSessionIso('2027-03-10') as string));
+  assert.equal(wall, '16');
 });
 
 // ── status actions ────────────────────────────────────────────────────
@@ -107,9 +117,10 @@ test('statusActions follows plan B and the DB transition table', () => {
   assert.deepEqual(to('proposal', false), ['confirmed']);
   assert.deepEqual(to('confirmed', false), ['live']);
   assert.deepEqual(to('confirmed', true), ['live', 'cancelled']);
-  assert.deepEqual(to('live', true), ['completed']);
+  assert.deepEqual(to('live', false), ['completed']);
+  assert.deepEqual(to('live', true), ['completed', 'confirmed']);
   assert.deepEqual(to('completed', false), []);
-  assert.deepEqual(to('completed', true), ['archived']);
+  assert.deepEqual(to('completed', true), ['live', 'archived']);
   assert.deepEqual(to('cancelled', true), ['draft']);
   assert.deepEqual(to('cancelled', false), []);
   assert.deepEqual(to('archived', true), []);
@@ -117,9 +128,30 @@ test('statusActions follows plan B and the DB transition table', () => {
 
 test('going live and completing carry the required confirm texts', () => {
   const live = U.statusActions('confirmed', false).find((a) => a.to === 'live');
-  assert.equal(live?.confirm, 'פתיחת הסדנה יוצרת את הקבוצות באפליקציית Smart City ומציגה אותן בהרשמה');
+  // ws_set_workshop_status activates existing groups; it never creates them
+  assert.equal(live?.confirm, U.GO_LIVE_CONFIRM);
+  assert.ok(!U.GO_LIVE_CONFIRM.includes('יוצרת'));
   const done = U.statusActions('live', false).find((a) => a.to === 'completed');
   assert.equal(done?.confirm, 'הקבוצות יוסתרו מההרשמה, הנתונים נשמרים');
+});
+
+test('reopen and back-to-confirmed are admin only and labelled for recovery', () => {
+  const reopen = U.statusActions('completed', true).find((a) => a.to === 'live');
+  assert.equal(reopen?.label, 'פתיחה מחדש');
+  assert.equal(reopen?.adminOnly, true);
+  const back = U.statusActions('live', true).find((a) => a.to === 'confirmed');
+  assert.equal(back?.label, 'חזרה להכנה');
+  assert.equal(back?.adminOnly, true);
+});
+
+test('needsGroupsFirst blocks only going live with zero groups', () => {
+  const live = U.statusActions('confirmed', true).find((a) => a.to === 'live')!;
+  const cancel = U.statusActions('confirmed', true).find((a) => a.to === 'cancelled')!;
+  assert.equal(U.needsGroupsFirst(live, 0), true);
+  assert.equal(U.needsGroupsFirst(live, 3), false);
+  assert.equal(U.needsGroupsFirst(live, null), false);
+  assert.equal(U.needsGroupsFirst(cancel, 0), false);
+  assert.equal(U.NEEDS_GROUPS_HINT, 'צרו קבוצות לפני הפתיחה');
 });
 
 // ── sorting ───────────────────────────────────────────────────────────

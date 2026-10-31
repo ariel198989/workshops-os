@@ -10,7 +10,8 @@ import { TabStrip, type TabItem } from '@/components/ws/TabStrip';
 import { WorkshopPills } from '@/components/ws/p3/BandPills';
 import { WorkshopStatusBar } from '@/components/ws/p3/WorkshopStatusBar';
 import styles from '@/components/ws/p3/p3.module.css';
-import { bumpData, toast, useStore } from '@/lib/store';
+import { bumpData, dataVersion, toast, useStore } from '@/lib/store';
+import { listGroups } from '@/lib/ws/groups';
 import { getOrganization } from '@/lib/ws/orgs';
 import { canEdit, isAdmin, wsAuthStore } from '@/lib/ws/staff';
 import type { WsWorkshop } from '@/lib/ws/types';
@@ -43,12 +44,16 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
   const { whoami } = useStore(wsAuthStore);
   const [workshop, setWorkshop] = useState<WsWorkshop | null | undefined>(undefined);
   const [orgName, setOrgName] = useState<string | null>(null);
+  // null until the groups query returns; 0 disables "פתיחת הסדנה"
+  const [groupCount, setGroupCount] = useState<number | null>(null);
   // bumped after a status change so every tab remounts and refetches
   const [version, setVersion] = useState(0);
+  // settings saves and group creation call bumpData(); the header refetches without flashing a spinner
+  const { n: dataN } = useStore(dataVersion);
 
   useEffect(() => {
     let live = true;
-    setWorkshop(undefined);
+    setWorkshop((cur) => (cur && cur.id === id ? cur : undefined));
     getWorkshop(id)
       .then((w) => {
         if (!live) return;
@@ -56,8 +61,9 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
         getOrganization(w.organization_id).then((o) => { if (live) setOrgName(o.name); }).catch(() => undefined);
       })
       .catch(() => { if (live) setWorkshop(null); });
+    listGroups(id).then((gs) => { if (live) setGroupCount(gs.length); }).catch(() => undefined);
     return () => { live = false; };
-  }, [id]);
+  }, [id, dataN]);
 
   if (workshop === null) {
     return (
@@ -91,7 +97,7 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
           )}
         </div>
         {workshop && canEdit(whoami, id) ? (
-          <WorkshopStatusBar workshop={workshop} admin={isAdmin(whoami)} onChanged={changed} />
+          <WorkshopStatusBar workshop={workshop} admin={isAdmin(whoami)} groupCount={groupCount} onChanged={changed} />
         ) : null}
       </header>
       <TabStrip base={`/workshops/${id}`} tabs={TABS} active={activeTab(pathname, id)} />

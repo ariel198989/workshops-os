@@ -79,7 +79,7 @@ export default function OverviewPage() {
           {overview.totals.members === 0 ? (
             <div className={styles.warn} role="status">
               <span>עדיין אין תלמידים בקבוצות. תלמידים מצטרפים באפליקציית התלמידים עם קוד הסדנה.</span>
-              <JoinInfo code={overview.workshop.code} />
+              <JoinInfo code={overview.workshop.code} status={overview.workshop.status} />
             </div>
           ) : null}
 

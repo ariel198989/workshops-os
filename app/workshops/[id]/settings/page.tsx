@@ -8,7 +8,7 @@ import { CustomFieldsCard } from '@/components/ws/p3/CustomFieldsCard';
 import { withFriendlyError } from '@/components/ws/p3/db-errors';
 import { WorkshopFields } from '@/components/ws/p3/WorkshopFields';
 import { WorkshopStaffPanel } from '@/components/ws/p3/WorkshopStaffPanel';
-import { useStore } from '@/lib/store';
+import { bumpData, useStore } from '@/lib/store';
 import { listGroups } from '@/lib/ws/groups';
 import { canEdit, isAdmin, wsAuthStore } from '@/lib/ws/staff';
 import type { WsWorkshop } from '@/lib/ws/types';
@@ -31,16 +31,22 @@ export default function Page() {
     return () => { live = false; };
   }, [id]);
 
+  // the layout header (title, code, pills) listens to dataVersion and refetches after every save
+  const saved = (next: WsWorkshop) => {
+    setWorkshop(next);
+    bumpData();
+  };
+
   if (workshop === undefined) return <Spinner large />;
   if (workshop === null) return <EmptyState icon={Settings02Icon} title="ההגדרות לא נטענו" text="רעננו את הדף ונסו שוב." />;
 
   return (
     <>
-      <WorkshopFields workshop={workshop} canEdit={editable} identityLocked={activated !== false || !admin} onSaved={setWorkshop} />
+      <WorkshopFields workshop={workshop} canEdit={editable} identityLocked={activated !== false || !admin} onSaved={saved} />
       <WorkshopStaffPanel workshopId={id} admin={admin} />
       <CustomFieldsCard entity="workshop" organizationId={workshop.organization_id} value={workshop.custom_fields}
         disabled={!editable}
-        onSave={async (custom_fields) => setWorkshop(await withFriendlyError(() => updateWorkshop(id, { custom_fields })))} />
+        onSave={async (custom_fields) => saved(await withFriendlyError(() => updateWorkshop(id, { custom_fields })))} />
     </>
   );
 }

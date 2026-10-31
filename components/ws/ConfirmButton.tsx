@@ -12,6 +12,8 @@ interface ConfirmButtonProps {
   onConfirm: () => Promise<unknown> | void;
   tone?: ConfirmTone;
   disabled?: boolean;
+  /** shown next to a disabled button, explaining why it is off */
+  hint?: string;
   small?: boolean;
 }
 
@@ -20,7 +22,7 @@ const FAIL = 'הפעולה נכשלה';
 
 /** Two-step inline confirm: the button turns into "question / yes / no". Esc backs out. */
 export function ConfirmButton({
-  label, confirmText = 'בטוח?', onConfirm, tone = 'default', disabled = false, small = false,
+  label, confirmText = 'בטוח?', onConfirm, tone = 'default', disabled = false, hint, small = false,
 }: ConfirmButtonProps) {
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -48,12 +50,14 @@ export function ConfirmButton({
   };
 
   if (!asking) {
-    return (
+    const button = (
       <button type="button" className={`${TONE_CLASS[tone]}${size}`.trim()} disabled={disabled}
-        onClick={() => setAsking(true)}>
+        title={disabled && hint ? hint : undefined} onClick={() => setAsking(true)}>
         {label}
       </button>
     );
+    if (!disabled || !hint) return button;
+    return <span className={styles.confirm}>{button}<span className="hint">{hint}</span></span>;
   }
   return (
     <span className={styles.confirm} role="group" aria-label={label}>

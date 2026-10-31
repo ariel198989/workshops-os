@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { toast } from '@/lib/store';
+import { bumpData, toast } from '@/lib/store';
 import { createGroups } from '@/lib/ws/groups';
 import { errorText } from './hooks';
 import styles from './board.module.css';
@@ -31,6 +31,8 @@ export function CreateGroupsForm({ workshopId, defaultCount, existing, onCreated
     try {
       await createGroups(workshopId, n);
       toast(`נוצרו ${n - existing} קבוצות`, true);
+      // the workshop header gates "פתיחת הסדנה" on the group count
+      bumpData();
       onCreated();
     } catch (err) {
       toast(errorText(err, 'יצירת הקבוצות נכשלה'));

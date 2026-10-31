@@ -18,6 +18,7 @@ const DESCRIBE: Record<string, Describe> = {
   'workshop.status': (p) => `סטטוס הסדנה שונה: ${labelOf('workshop', text(p.from))} ← ${labelOf('workshop', text(p.to))}`,
   'group.activated': (p) => `קבוצה הופעלה${text(p.team_name) ? `: ${text(p.team_name)}` : ''}`,
   'participant.linked': () => 'משתתף קושר לחשבון',
+  'participant.joined': (p) => `תלמיד/ה הצטרפו לקבוצה${text(p.team_name) ? `: ${text(p.team_name)}` : ''}`,
   'participant.moved': (p) => `משתתף הועבר${text(p.from) ? ` מ-${text(p.from)}` : ''}${text(p.to) ? ` ל-${text(p.to)}` : ''}`,
   'curriculum.instantiated': (p) => `נטענה תבנית: ${text(p.sessions)} מפגשים`,
   'deliverable.locked': () => 'תוצר נעול ואושר',

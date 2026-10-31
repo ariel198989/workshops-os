@@ -79,7 +79,7 @@ export default function GroupsPage() {
                 {board.polling ? <><span className={styles.liveDot} aria-hidden="true" />מתעדכן כל {POLL_MS / 1000} שניות</> : 'רענון ידני'}
                 {stamp ? ` · עודכן ב-${stamp}` : ''}
               </span>
-              <JoinInfo code={overview.workshop.code} />
+              <JoinInfo code={overview.workshop.code} status={overview.workshop.status} />
             </div>
             <div className={styles.barEnd}>
               <button type="button" className="sm" onClick={() => void board.refresh()} disabled={board.refreshing}>רענון</button>

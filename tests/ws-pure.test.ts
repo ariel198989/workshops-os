@@ -212,6 +212,19 @@ test('eventLabel renders Hebrew sentences and falls back to the raw action', () 
   assert.equal(E.eventLabel(evt('something.new')), 'something.new');
 });
 
+test('every action the ws_* SQL writes to ws_events has a Hebrew label', () => {
+  // kinds collected from `insert into public.ws_events` in supabase/migrations (read-only)
+  const kinds = ['workshop.status', 'group.activated', 'participant.linked', 'participant.joined', 'participant.moved',
+    'curriculum.instantiated', 'deliverable.locked', 'certificates.issued', 'certificate.revoked'];
+  for (const k of kinds) {
+    const label = E.eventLabel(evt(k, { team_name: 'אופק · קבוצה 1', from: 'draft', to: 'live' }));
+    assert.notEqual(label, k, k);
+    assert.match(label, /[֐-׿]/, k);
+  }
+  assert.equal(E.eventLabel(evt('participant.joined', { team_name: 'אופק · קבוצה 2' })), 'תלמיד/ה הצטרפו לקבוצה: אופק · קבוצה 2');
+  assert.equal(E.eventLabel(evt('participant.joined')), 'תלמיד/ה הצטרפו לקבוצה');
+});
+
 // ── curriculum.json mapping / roster cleaning ─────────────────────────
 test('moduleRowFromJson yields a DB-valid slug, type and duration', () => {
   const row = K.moduleRowFromJson({

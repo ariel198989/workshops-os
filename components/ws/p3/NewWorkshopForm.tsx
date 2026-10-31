@@ -17,18 +17,18 @@ import { validateWorkshopForm } from './form-utils';
 import { OrgPicker } from './OrgPicker';
 import { BAND_OPTIONS, CYCLE_DEPTH_OPTIONS, DEVICE_LABELS, FORMAT_LABELS, FORMAT_OPTIONS } from './options';
 import { TeamPrefixField } from './TeamPrefixField';
-import { firstSessionIso, normalizeCode, pickDefaultTemplate, suggestCode } from './workshop-utils';
+import { firstSessionIso, normalizeCode, pickDefaultTemplate, randomCode } from './workshop-utils';
 import styles from './p3.module.css';
 
 interface FormState {
-  orgId: string; title: string; code: string; codeTouched: boolean; prefix: string;
+  orgId: string; title: string; code: string; prefix: string;
   format: WorkshopFormat; templateId: string | null; groupSize: string | null;
   startsOn: string; endsOn: string; grade: string; classLabel: string; audience: string;
   band: Band | null; depth: CycleDepth; device: DeviceMode; location: string; notes: string;
 }
 
 const INITIAL: FormState = {
-  orgId: '', title: '', code: '', codeTouched: false, prefix: '', format: 'sessions', templateId: null,
+  orgId: '', title: '', code: '', prefix: '', format: 'sessions', templateId: null,
   groupSize: null, startsOn: '', endsOn: '', grade: '', classLabel: '', audience: '',
   band: null, depth: 'L3', device: 'school_tablet_or_lab_pc', location: '', notes: '',
 };
@@ -94,7 +94,8 @@ function DeviceSelect({ band, value, onChange }: { band: Band | null; value: Dev
 
 export function NewWorkshopForm() {
   const router = useRouter();
-  const [f, setF] = useState<FormState>(INITIAL);
+  // the join code is random (the DB default is too): never derived from the org or the date
+  const [f, setF] = useState<FormState>(() => ({ ...INITIAL, code: randomCode() }));
   const [orgs, setOrgs] = useState<WsOrganization[]>([]);
   const [templates, setTemplates] = useState<WsCurriculumTemplate[]>([]);
   const [showErrors, setShowErrors] = useState(false);
@@ -114,8 +115,7 @@ export function NewWorkshopForm() {
   const formatTemplates = useMemo(() => templates.filter((t) => t.format === f.format), [templates, f.format]);
   const template = formatTemplates.find((t) => t.id === f.templateId) ?? pickDefaultTemplate(templates, f.format);
   const groupSize = f.groupSize ?? String(template?.default_group_size ?? FALLBACK_GROUP_SIZE);
-  const org = orgs.find((o) => o.id === f.orgId);
-  const code = f.codeTouched ? f.code : org ? suggestCode(org.name, f.startsOn) : '';
+  const code = f.code;
   const values = { orgId: f.orgId, title: f.title, code, prefix: f.prefix, startsOn: f.startsOn, endsOn: f.endsOn,
     audience: f.audience, groupSize };
   const errors = showErrors ? validateWorkshopForm(values) : {};
@@ -175,7 +175,8 @@ export function NewWorkshopForm() {
         </Field>
         <Field label="קוד" htmlFor="ws-code" error={errors.code ?? ''}>
           <input id="ws-code" type="text" dir="ltr" value={code}
-            onChange={(e) => setF((p) => ({ ...p, code: normalizeCode(e.target.value), codeTouched: true }))} />
+            onChange={(e) => set('code', normalizeCode(e.target.value))} />
+          <button type="button" className="ghost sm" onClick={() => set('code', randomCode())}>קוד אקראי חדש</button>
         </Field>
         <Field label="קידומת קבוצות" htmlFor="ws-prefix" className={styles.span2}>
           <TeamPrefixField value={f.prefix} onChange={(v) => set('prefix', v)} error={errors.prefix} />

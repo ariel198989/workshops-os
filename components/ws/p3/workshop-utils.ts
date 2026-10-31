@@ -14,14 +14,22 @@ export function normalizeCode(raw: string): string {
 
 export const validateCode = (code: string): string | null => (CODE_PATTERN.test(code) ? null : CODE_RULE);
 
-/** ORG-YYMM from the first latin word of the org name and the start date. Always a valid code. */
-export function suggestCode(orgName: string | null | undefined, startsOn: string | null | undefined): string {
-  const word = (orgName ?? '').match(/[A-Za-z0-9]+/)?.[0] ?? '';
-  const head = normalizeCode(word).slice(0, 8) || 'WS';
-  const m = /^(\d{4})-(\d{2})-\d{2}/.exec(startsOn ?? '');
-  const tail = m ? `${m[1].slice(2)}${m[2]}` : 'NEW';
-  const code = `${head}-${tail}`;
-  return code.length >= CODE_MIN ? code : `${code}-WS`;
+/** Join-code alphabet without the look-alikes 0/O and 1/I (what a teacher reads out to a class). */
+export const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const CODE_BLOCK = 4;
+
+function randomIndices(n: number): number[] {
+  const out = new Uint8Array(n);
+  if (typeof globalThis.crypto?.getRandomValues === 'function') globalThis.crypto.getRandomValues(out);
+  else for (let i = 0; i < n; i += 1) out[i] = Math.floor(Math.random() * 256);
+  // 256 is a multiple of 32, so the modulo keeps the draw uniform
+  return Array.from(out, (b) => b % CODE_ALPHABET.length);
+}
+
+/** Random XXXX-XXXX code (9 chars) from CODE_ALPHABET. Always passes validateCode; never predictable. */
+export function randomCode(): string {
+  const chars = randomIndices(CODE_BLOCK * 2).map((i) => CODE_ALPHABET[i]);
+  return `${chars.slice(0, CODE_BLOCK).join('')}-${chars.slice(CODE_BLOCK).join('')}`;
 }
 
 // ── team prefix ───────────────────────────────────────────────────────
@@ -53,12 +61,30 @@ export function pickDefaultTemplate<T extends TemplateLike>(templates: readonly 
 }
 
 const FIRST_SESSION_HOUR = 16;
+export const WORKSHOP_TIME_ZONE = 'Asia/Jerusalem';
 
-/** Start date at 16:00 browser-local time as an ISO instant (the RPC takes timestamptz). */
+const tzParts = new Intl.DateTimeFormat('en-US', {
+  timeZone: WORKSHOP_TIME_ZONE, hourCycle: 'h23',
+  year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+});
+
+/** Offset of WORKSHOP_TIME_ZONE from UTC at the given instant, in ms (positive east of Greenwich). */
+function zoneOffsetMs(utcMs: number): number {
+  const parts = tzParts.formatToParts(new Date(utcMs));
+  const num = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const wall = Date.UTC(num('year'), num('month') - 1, num('day'), num('hour'), num('minute'), num('second'));
+  return wall - utcMs;
+}
+
+/** Start date at 16:00 Asia/Jerusalem as an ISO instant, whatever the browser's zone (the RPC takes timestamptz). */
 export function firstSessionIso(startsOn: string | null | undefined): string | null {
-  if (!startsOn || !/^\d{4}-\d{2}-\d{2}$/.test(startsOn)) return null;
-  const d = new Date(`${startsOn}T${FIRST_SESSION_HOUR}:00:00`);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(startsOn ?? '');
+  if (!m) return null;
+  const wall = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), FIRST_SESSION_HOUR);
+  if (Number.isNaN(wall)) return null;
+  // two passes so a DST switch on the day itself still lands on 16:00 wall-clock
+  const utc = wall - zoneOffsetMs(wall - zoneOffsetMs(wall));
+  return new Date(utc).toISOString();
 }
 
 // ── status transitions (plan B, restricted to what ws_set_workshop_status accepts) ──
@@ -77,15 +103,23 @@ const act = (
 
 const CANCEL = act('cancelled', 'ביטול הסדנה', 'לבטל את הסדנה?', 'danger', true);
 
+export const GO_LIVE_CONFIRM = 'פתיחת הסדנה מפעילה את הקבוצות הקיימות באפליקציית Smart City ומציגה אותן בהרשמה';
+export const NEEDS_GROUPS_HINT = 'צרו קבוצות לפני הפתיחה';
+const GO_LIVE = act('live', 'פתיחת הסדנה', GO_LIVE_CONFIRM, 'primary');
+
+// completed -> live and live -> confirmed exist so a premature close is recoverable (admins only)
 const TRANSITIONS: Record<WorkshopStatus, readonly StatusAction[]> = {
   draft: [act('proposal', 'העברה להצעה', 'להעביר להצעה?'), act('confirmed', 'אישור הסדנה', 'לאשר את הסדנה?'), CANCEL],
   proposal: [act('confirmed', 'אישור הסדנה', 'לאשר את הסדנה?'), CANCEL],
-  confirmed: [
-    act('live', 'פתיחת הסדנה', 'פתיחת הסדנה יוצרת את הקבוצות באפליקציית Smart City ומציגה אותן בהרשמה', 'primary'),
-    CANCEL,
+  confirmed: [GO_LIVE, CANCEL],
+  live: [
+    act('completed', 'סיום הסדנה', 'הקבוצות יוסתרו מההרשמה, הנתונים נשמרים', 'primary'),
+    act('confirmed', 'חזרה להכנה', 'להחזיר את הסדנה להכנה? הקבוצות יוסתרו מההרשמה עד הפתיחה הבאה', 'default', true),
   ],
-  live: [act('completed', 'סיום הסדנה', 'הקבוצות יוסתרו מההרשמה, הנתונים נשמרים', 'primary')],
-  completed: [act('archived', 'העברה לארכיון', 'להעביר לארכיון?', 'default', true)],
+  completed: [
+    act('live', 'פתיחה מחדש', 'לפתוח את הסדנה מחדש? הקבוצות יוצגו שוב בהרשמה', 'default', true),
+    act('archived', 'העברה לארכיון', 'להעביר לארכיון?', 'default', true),
+  ],
   archived: [],
   cancelled: [act('draft', 'שחזור לטיוטה', 'לשחזר לטיוטה?', 'default', true)],
 };
@@ -93,6 +127,10 @@ const TRANSITIONS: Record<WorkshopStatus, readonly StatusAction[]> = {
 export function statusActions(status: WorkshopStatus, admin: boolean): StatusAction[] {
   return TRANSITIONS[status].filter((a) => admin || !a.adminOnly);
 }
+
+/** Going live with no groups activates nothing; null = groups still loading, so the button stays enabled. */
+export const needsGroupsFirst = (action: StatusAction, groupCount: number | null): boolean =>
+  action.to === 'live' && groupCount === 0;
 
 // ── list ordering ─────────────────────────────────────────────────────
 const RANK: Record<WorkshopStatus, number> = {
