@@ -3,10 +3,15 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import { useParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { canEdit, wsAuthStore } from '@/lib/ws/staff';
+import { dbErrorMessage } from '../p3/db-errors';
 
-/** Supabase errors are plain objects with a message, not Error instances. */
+/**
+ * Supabase errors are plain objects with a code and a message, not Error instances.
+ * Those go through dbErrorMessage so raw English RPC text (group is full, no template for format...) never reaches a toast.
+ */
 export function errorText(err: unknown, fallback = 'הפעולה נכשלה'): string {
   if (err instanceof Error && err.message) return err.message;
+  if (typeof err === 'object' && err !== null && 'code' in err) return dbErrorMessage(err, fallback);
   if (typeof err === 'object' && err !== null && 'message' in err) {
     const m = (err as { message: unknown }).message;
     if (typeof m === 'string' && m) return m;

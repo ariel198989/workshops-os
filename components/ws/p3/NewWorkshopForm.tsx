@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { useRouter } from 'next/navigation';
 import { toast } from '@/lib/store';
 import { instantiateCurriculum, listTemplates } from '@/lib/ws/curriculum';
-import { deviceRuleNotes, groupDevices, prefillFromBand, prefillFromTemplate, type Prefill } from '@/lib/ws/device-rules';
+import {
+  blockingNote, deviceRuleNotes, groupDevices, prefillFromBand, prefillFromTemplate, type Prefill,
+} from '@/lib/ws/device-rules';
 import { listOrganizations } from '@/lib/ws/orgs';
 import { templateGateNote } from '@/lib/ws/template-groups';
 import {
@@ -13,7 +15,7 @@ import {
 import { createWorkshop } from '@/lib/ws/workshops';
 import { BandPill, DepthPill, ReleasePill, RuleNotes } from './BandPills';
 import { dbErrorMessage } from './db-errors';
-import { validateWorkshopForm } from './form-utils';
+import { DRAFT_CONFIRM_LABEL, validateWorkshopForm } from './form-utils';
 import { OrgPicker } from './OrgPicker';
 import { BAND_OPTIONS, CYCLE_DEPTH_OPTIONS, DEVICE_LABELS, FORMAT_LABELS, FORMAT_OPTIONS } from './options';
 import { TeamPrefixField } from './TeamPrefixField';
@@ -25,12 +27,14 @@ interface FormState {
   format: WorkshopFormat; templateId: string | null; groupSize: string | null;
   startsOn: string; endsOn: string; grade: string; classLabel: string; audience: string;
   band: Band | null; depth: CycleDepth; device: DeviceMode; location: string; notes: string;
+  /** written-approval checkbox for a draft template; reset whenever the template changes */
+  draftConfirmed: boolean;
 }
 
 const INITIAL: FormState = {
   orgId: '', title: '', code: '', prefix: '', format: 'sessions', templateId: null,
   groupSize: null, startsOn: '', endsOn: '', grade: '', classLabel: '', audience: '',
-  band: null, depth: 'L3', device: 'school_tablet_or_lab_pc', location: '', notes: '',
+  band: null, depth: 'L3', device: 'school_tablet_or_lab_pc', location: '', notes: '', draftConfirmed: false,
 };
 
 const FALLBACK_GROUP_SIZE = 4;
@@ -51,7 +55,8 @@ function Field({ label, htmlFor, error, className, children }: {
   );
 }
 
-/** Radio-style template list: title, band / depth / release pills, and the gate note for draft or blocked. */
+/** Radio-style template list: title, band / depth / release pills, and the gate note for draft or blocked.
+ *  Blocked templates are disabled (ws_instantiate_curriculum refuses them with template_blocked). */
 function TemplatePicker({ templates, selectedId, onPick }: {
   templates: readonly WsCurriculumTemplate[]; selectedId: string | null; onPick: (id: string) => void;
 }) {
@@ -59,10 +64,12 @@ function TemplatePicker({ templates, selectedId, onPick }: {
     <div className={styles.tplList} role="radiogroup" aria-label="תבנית">
       {templates.map((t) => {
         const on = t.id === selectedId;
+        const blocked = t.release_status === 'blocked';
         const gate = templateGateNote(t);
         return (
-          <button key={t.id} type="button" role="radio" aria-checked={on}
-            className={`${styles.tplItem} ${on ? styles.tplItemOn : ''}`} onClick={() => onPick(t.id)}>
+          <button key={t.id} type="button" role="radio" aria-checked={on} disabled={blocked}
+            className={`${styles.tplItem} ${on ? styles.tplItemOn : ''} ${blocked ? styles.tplItemOff : ''}`}
+            onClick={() => onPick(t.id)}>
             <span className={styles.tplItemRow}>
               <span className={styles.tplItemTitle}>{t.title}</span>
               <BandPill band={t.band} />
@@ -116,10 +123,12 @@ export function NewWorkshopForm() {
   const template = formatTemplates.find((t) => t.id === f.templateId) ?? pickDefaultTemplate(templates, f.format);
   const groupSize = f.groupSize ?? String(template?.default_group_size ?? FALLBACK_GROUP_SIZE);
   const code = f.code;
-  const values = { orgId: f.orgId, title: f.title, code, prefix: f.prefix, startsOn: f.startsOn, endsOn: f.endsOn,
-    audience: f.audience, groupSize };
-  const errors = showErrors ? validateWorkshopForm(values) : {};
   const notes = deviceRuleNotes(toPrefill(f));
+  const blocked = blockingNote(notes);
+  const templateDraft = template?.release_status === 'draft';
+  const values = { orgId: f.orgId, title: f.title, code, prefix: f.prefix, startsOn: f.startsOn, endsOn: f.endsOn,
+    audience: f.audience, groupSize, templateDraft, draftConfirmed: f.draftConfirmed, deviceBlock: blocked?.text ?? null };
+  const errors = showErrors ? validateWorkshopForm(values) : {};
 
   // a newly effective template (first load, format change, click) prefills band / depth / device once;
   // whatever the user changes afterwards stays until the template changes again
@@ -127,7 +136,7 @@ export function NewWorkshopForm() {
   useEffect(() => {
     if (!template || appliedTemplate.current === template.id) return;
     appliedTemplate.current = template.id;
-    setF((p) => ({ ...p, ...fromPrefill(prefillFromTemplate(template, toPrefill(p))) }));
+    setF((p) => ({ ...p, ...fromPrefill(prefillFromTemplate(template, toPrefill(p))), draftConfirmed: false }));
   }, [template]);
 
   const pickBand = (raw: string) => {
@@ -188,11 +197,17 @@ export function NewWorkshopForm() {
           </select>
         </Field>
         <Field label="תבנית" className={styles.spanAll}
-          error={formatTemplates.length === 0 ? `אין תבנית לפורמט ${FORMAT_LABELS[f.format]}` : ''}>
+          error={formatTemplates.length === 0 ? `אין תבנית לפורמט ${FORMAT_LABELS[f.format]}` : errors.template ?? ''}>
           {formatTemplates.length === 0 ? null : (
             <TemplatePicker templates={formatTemplates} selectedId={template?.id ?? null}
               onPick={(id) => setF((p) => ({ ...p, templateId: id, groupSize: null }))} />
           )}
+          {templateDraft ? (
+            <label className={styles.checkInline}>
+              <input type="checkbox" checked={f.draftConfirmed} onChange={(e) => set('draftConfirmed', e.target.checked)} />
+              {DRAFT_CONFIRM_LABEL}
+            </label>
+          ) : null}
         </Field>
         <Field label="שכבה" htmlFor="ws-band">
           <select id="ws-band" value={f.band ?? ''} onChange={(e) => pickBand(e.target.value)}>
@@ -205,7 +220,7 @@ export function NewWorkshopForm() {
             {CYCLE_DEPTH_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </Field>
-        <Field label="מצב מכשיר" htmlFor="ws-device">
+        <Field label="מצב מכשיר" htmlFor="ws-device" error={errors.device ?? ''}>
           <DeviceSelect band={f.band} value={f.device} onChange={(d) => set('device', d)} />
         </Field>
         {notes.length > 0 ? <div className={styles.spanAll}><RuleNotes notes={notes} /></div> : null}
@@ -235,7 +250,7 @@ export function NewWorkshopForm() {
         </Field>
       </div>
       <div className={styles.formActions}>
-        <button type="submit" className="primary" disabled={busy}>יצירת סדנה</button>
+        <button type="submit" className="primary" disabled={busy || blocked !== null}>יצירת סדנה</button>
         <button type="button" className="ghost" disabled={busy} onClick={() => router.push('/workshops')}>ביטול</button>
       </div>
     </form>

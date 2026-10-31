@@ -17,7 +17,6 @@ function uniqueMessage(msg: string): string {
   if (/ws_contacts_one_primary/.test(msg)) return 'כבר יש איש קשר ראשי';
   if (/ws_field_definitions_uq/.test(msg)) return 'שדה עם המפתח הזה כבר קיים';
   if (/ws_staff_email/.test(msg)) return 'האימייל כבר רשום בצוות';
-  if (/already has sessions/.test(msg)) return 'לסדנה כבר יש מפגשים';
   return 'הערך כבר קיים';
 }
 
@@ -28,8 +27,22 @@ function checkMessage(msg: string): string {
   return 'הערך לא עומד בכללי המערכת';
 }
 
+// RPC messages matched by text first: the same sentence may arrive under different SQLSTATEs
+const BY_MESSAGE: readonly [RegExp, string][] = [
+  [/template_blocked/, 'התבנית חסומה ואי אפשר להריץ אותה כרגע'],
+  [/device_not_allowed_for_band/, 'מצב המכשיר הזה לא מותר לשכבה שנבחרה. ביסודי אין טלפונים אישיים'],
+  [/already has Smart City data/, 'שם הקבוצה כבר קיים ב-Smart City. שנו את קידומת הקבוצות של הסדנה'],
+  [/no template for format/, 'אין תבנית תוכנית לפורמט של הסדנה. בחרו תבנית בהגדרות או צרו אחת'],
+  [/group is full/, 'הקבוצה מלאה'],
+  [/already has sessions/, 'לסדנה כבר יש מפגשים'],
+  [/already in another group/, 'התלמיד/ה כבר בקבוצה אחרת'],
+  [/not found or not live/, 'הסדנה לא נמצאה או שהיא לא פתוחה'],
+];
+
 export function dbErrorMessage(err: unknown, fallback: string = DEFAULT_FAIL): string {
   const { code, msg } = parts(err);
+  const known = BY_MESSAGE.find(([re]) => re.test(msg));
+  if (known) return known[1];
   switch (code) {
     case '23505': return uniqueMessage(msg);
     case '23514': return checkMessage(msg);
@@ -37,6 +50,8 @@ export function dbErrorMessage(err: unknown, fallback: string = DEFAULT_FAIL): s
     case '42501': return 'אין הרשאה לפעולה הזו';
     case '22023': return /transition/.test(msg) ? 'המעבר הזה אינו מותר מהמצב הנוכחי' : fallback;
     case 'P0002': return /no account/.test(msg) ? 'אין חשבון למייל הזה. בקשו מהמשתמש להירשם או שלחו הזמנה במייל' : fallback;
+    case 'P0003': return 'התבנית חסומה ואי אפשר להריץ אותה כרגע';
+    case 'P0004': return 'מצב המכשיר הזה לא מותר לשכבה שנבחרה. ביסודי אין טלפונים אישיים';
     default: return fallback;
   }
 }

@@ -1,5 +1,5 @@
 'use client';
-import { deviceRuleNotes } from '@/lib/ws/device-rules';
+import { blockingNote, deviceRuleNotes } from '@/lib/ws/device-rules';
 import { updateWorkshop } from '@/lib/ws/workshops';
 import type { Band, CycleDepth, DeviceMode, WorkshopPatch, WsWorkshop } from '@/lib/ws/types';
 import { InlineEdit } from '../InlineEdit';
@@ -38,6 +38,11 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
   const num = (key: NumKey) => (v: InlineValue) => save({ [key]: v === null ? null : Number(v) });
   const off = !canEdit;
   const notes = deviceRuleNotes({ band: w.band, cycleDepth: w.cycle_depth, deviceMode: w.device_mode });
+  // same gate as ws_instantiate_curriculum (device_not_allowed_for_band), surfaced before the save
+  const guard = (band: Band | null, deviceMode: DeviceMode) => {
+    const block = blockingNote(deviceRuleNotes({ band, cycleDepth: w.cycle_depth, deviceMode }));
+    if (block) throw new Error(block.text);
+  };
 
   return (
     <section className={`hud ${styles.card}`}>
@@ -72,7 +77,11 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
         </KvField>
         <KvField label="שכבה">
           <InlineEdit type="select" value={w.band} options={BAND_OPTIONS} disabled={off} ariaLabel="שכבה"
-            onSave={(v) => save({ band: v === null ? null : (v as Band) })} />
+            onSave={(v) => {
+              const band = v === null ? null : (v as Band);
+              guard(band, w.device_mode);
+              return save({ band });
+            }} />
         </KvField>
         <KvField label="עומק מעגל">
           <InlineEdit type="select" value={w.cycle_depth} options={CYCLE_DEPTH_OPTIONS} disabled={off} ariaLabel="עומק מעגל"
@@ -85,6 +94,7 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
           <InlineEdit type="select" value={w.device_mode} options={DEVICE_OPTIONS} disabled={off} ariaLabel="מצב מכשיר"
             onSave={(v) => {
               if (v === null) throw new Error('יש לבחור מצב מכשיר');
+              guard(w.band, v as DeviceMode);
               return save({ device_mode: v as DeviceMode });
             }} />
         </KvField>

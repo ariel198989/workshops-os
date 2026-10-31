@@ -19,7 +19,7 @@ export default function DeliverablesPage() {
   if (data.length === 0) {
     return (
       <EmptyState icon={PackageIcon} title="אין עדיין תוצרים"
-        text="הרשומות נוצרות אוטומטית כשהסדנה עוברת ל-live." />
+        text="הרשומות נוצרות אוטומטית כשהסדנה נפתחת (סטטוס חי)." />
     );
   }
   return (

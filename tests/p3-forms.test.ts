@@ -35,6 +35,15 @@ test('validateWorkshopForm passes a complete form', () => {
   assert.deepEqual(F.validateWorkshopForm(GOOD), {});
 });
 
+test('validateWorkshopForm: a draft template needs the written-approval checkbox, a device block is an error', () => {
+  assert.deepEqual(F.validateWorkshopForm({ ...GOOD, templateDraft: true, draftConfirmed: false }), { template: F.DRAFT_CONFIRM_ERROR });
+  assert.deepEqual(F.validateWorkshopForm({ ...GOOD, templateDraft: true, draftConfirmed: true }), {});
+  assert.deepEqual(F.validateWorkshopForm({ ...GOOD, templateDraft: false, draftConfirmed: false }), {});
+  assert.deepEqual(F.validateWorkshopForm({ ...GOOD, deviceBlock: 'אין טלפונים' }), { device: 'אין טלפונים' });
+  assert.deepEqual(F.validateWorkshopForm({ ...GOOD, deviceBlock: null }), {});
+  assert.equal(F.DRAFT_CONFIRM_LABEL, 'אני מבין/ה שהתוכנית בטיוטה ומריץ/ה באישור כתוב');
+});
+
 test('validateWorkshopForm reports each broken field under its key', () => {
   const errs = F.validateWorkshopForm({
     ...GOOD, orgId: '', title: ' a ', code: 'ab', prefix: 'אישי א', startsOn: '2026-11-10', endsOn: '2026-11-03',

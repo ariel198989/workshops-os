@@ -56,13 +56,21 @@ test('groupDevices puts the recommended modes first and never drops or duplicate
 });
 
 // ── legality notes ────────────────────────────────────────────────────
-test('personal phones in elementary warn, for each elementary band and each phone-bearing mode', () => {
-  for (const band of ['a-b', 'c-d', 'e-f'] as const) {
-    for (const device of ['own_phones', 'byod_phone_approved_lesson', 'laptop_plus_phone'] as const) {
-      assert.ok(note(band, 'L1', device).some((n) => n.level === 'warning' && n.text === R.NO_PHONES_ELEMENTARY), `${band} ${device}`);
+test('personal phones block a-b and c-d, warn in e-f, for each phone-bearing mode', () => {
+  for (const device of ['own_phones', 'byod_phone_approved_lesson', 'laptop_plus_phone'] as const) {
+    for (const band of ['a-b', 'c-d'] as const) {
+      const notes = note(band, 'L1', device);
+      assert.ok(notes.some((n) => n.level === 'error' && n.text === R.NO_PHONES_ELEMENTARY), `${band} ${device}`);
+      assert.equal(R.blockingNote(notes)?.text, R.NO_PHONES_ELEMENTARY, `${band} ${device}`);
     }
+    const ef = note('e-f', 'L1', device);
+    assert.ok(ef.some((n) => n.level === 'warning' && n.text === R.NO_PHONES_ELEMENTARY), `e-f ${device}`);
+    assert.equal(R.blockingNote(ef), null, `e-f ${device}`);
   }
   assert.ok(!note('e-f', 'L2', 'school_tablet_teacher_controlled').some((n) => n.text === R.NO_PHONES_ELEMENTARY));
+  // nothing else blocks: middle-school phones and deep cycles in a-b are warnings only
+  assert.equal(R.blockingNote(note('g-i', 'L3', 'own_phones')), null);
+  assert.equal(R.blockingNote(note('a-b', 'L4', 'school_tablet_capture_only')), null);
 });
 
 test('middle school phones need written approval; laptop_plus_phone is not flagged there', () => {
@@ -87,10 +95,10 @@ test('a-b and c-d with L2 or deeper warn about AI tools; L0/L1 do not', () => {
   assert.ok(!note('e-f', 'L3', 'school_tablet_teacher_controlled').some((n) => n.text === R.NO_AI_TOOLS_LOWER_ELEMENTARY));
 });
 
-test('the defaults of every band produce no warning', () => {
+test('the defaults of every band produce neither a warning nor a blocking note', () => {
   for (const band of T.BANDS) {
     const notes = note(band, R.DEFAULT_DEPTH_BY_BAND[band], R.DEFAULT_DEVICE_BY_BAND[band]);
-    assert.deepEqual(notes.filter((n) => n.level === 'warning'), [], band);
+    assert.deepEqual(notes.filter((n) => n.level !== 'info'), [], band);
   }
 });
 

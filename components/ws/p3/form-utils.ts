@@ -10,7 +10,15 @@ export interface WorkshopFormValues {
   endsOn: string;
   audience: string;
   groupSize: string;
+  /** the chosen template is a draft (needs the written-approval checkbox) */
+  templateDraft?: boolean;
+  draftConfirmed?: boolean;
+  /** blocking device note from lib/ws/device-rules, if any */
+  deviceBlock?: string | null;
 }
+
+export const DRAFT_CONFIRM_LABEL = 'אני מבין/ה שהתוכנית בטיוטה ומריץ/ה באישור כתוב';
+export const DRAFT_CONFIRM_ERROR = 'יש לאשר את הרצת תוכנית הטיוטה';
 
 export const TITLE_MIN = 2;
 export const TITLE_MAX = 160;
@@ -32,5 +40,7 @@ export function validateWorkshopForm(v: WorkshopFormValues): Record<string, stri
   if (v.startsOn && v.endsOn && v.endsOn < v.startsOn) errors.endsOn = 'תאריך הסיום לפני ההתחלה';
   if (v.audience.trim() !== '' && !intInRange(v.audience, 1, 500)) errors.audience = 'מספר בין 1 ל-500';
   if (!intInRange(v.groupSize, 2, 8)) errors.groupSize = 'גודל קבוצה בין 2 ל-8';
+  if (v.templateDraft && !v.draftConfirmed) errors.template = DRAFT_CONFIRM_ERROR;
+  if (v.deviceBlock) errors.device = v.deviceBlock;
   return errors;
 }

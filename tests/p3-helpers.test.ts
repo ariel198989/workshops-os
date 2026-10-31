@@ -91,6 +91,13 @@ test('pickDefaultTemplate prefers the default template of the chosen format', ()
   assert.equal(U.pickDefaultTemplate([t('x', 'custom', true)], 'sessions'), null);
 });
 
+test('pickDefaultTemplate never lands on a blocked template; drafts are allowed', () => {
+  const t = (id: string, is_default: boolean, release_status: string) => ({ id, format: 'sessions', is_default, release_status });
+  assert.equal(U.pickDefaultTemplate([t('b', true, 'blocked'), t('d', false, 'draft'), t('l', false, 'live')], 'sessions')?.id, 'd');
+  assert.equal(U.pickDefaultTemplate([t('b', true, 'blocked')], 'sessions'), null);
+  assert.equal(U.pickDefaultTemplate([t('l', false, 'live'), t('d', true, 'draft')], 'sessions')?.id, 'd');
+});
+
 // ── first session ─────────────────────────────────────────────────────
 test('firstSessionIso is 16:00 Asia/Jerusalem regardless of the process zone (winter and summer)', () => {
   assert.equal(U.firstSessionIso(''), null);
@@ -185,6 +192,19 @@ test('dbErrorMessage covers permission, missing account, lock and unknown errors
   assert.equal(E.dbErrorMessage(new Error('boom secret detail')), 'הפעולה נכשלה');
   assert.equal(E.dbErrorMessage(null, 'נכשל'), 'נכשל');
   assert.equal(E.dbErrorMessage('weird'), 'הפעולה נכשלה');
+});
+
+test('dbErrorMessage turns the raw RPC sentences into Hebrew, whatever the SQLSTATE', () => {
+  const m = (code: string, message: string) => E.dbErrorMessage({ code, message });
+  assert.match(m('P0003', 'template_blocked'), /חסומה/);
+  assert.match(m('P0004', 'device_not_allowed_for_band'), /מכשיר/);
+  assert.match(m('P0001', 'template_blocked'), /חסומה/);
+  assert.match(m('23505', 'team name "x" already has Smart City data — change the workshop team_prefix'), /Smart City/);
+  assert.match(m('P0002', 'no template for format sessions'), /אין תבנית/);
+  assert.match(m('23514', 'group is full (capacity 4)'), /מלאה/);
+  assert.match(m('23505', 'workshop already has sessions — edit them instead'), /מפגשים/);
+  const raws = ['template_blocked', 'device_not_allowed_for_band', 'already has Smart City data', 'no template for format', 'group is full'];
+  for (const raw of raws) assert.ok(!E.dbErrorMessage({ code: '', message: raw }).includes(raw), raw);
 });
 
 test('fmtDay renders DD/MM/YYYY and empties bad input', () => {

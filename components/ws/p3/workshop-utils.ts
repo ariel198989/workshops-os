@@ -53,10 +53,11 @@ export function validateTeamPrefix(raw: string): string | null {
 export const teamNamePreview = (prefix: string, n = 1): string => `${prefix.trim()} · קבוצה ${n}`;
 
 // ── template and first session ────────────────────────────────────────
-interface TemplateLike { id: string; format: string; is_default: boolean }
+interface TemplateLike { id: string; format: string; is_default: boolean; release_status?: string }
 
+/** Default template of the format; blocked templates are never picked (the picker disables them too). */
 export function pickDefaultTemplate<T extends TemplateLike>(templates: readonly T[], format: WorkshopFormat): T | null {
-  const ofFormat = templates.filter((t) => t.format === format);
+  const ofFormat = templates.filter((t) => t.format === format && t.release_status !== 'blocked');
   return ofFormat.find((t) => t.is_default) ?? ofFormat[0] ?? null;
 }
 

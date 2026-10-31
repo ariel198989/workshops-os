@@ -23,7 +23,7 @@ function ModuleTable({ row }: { row: ConceptSummaryRow }) {
           <tbody>
             {row.items.map((it) => (
               <tr key={it.id}>
-                <td>{questionLabel(it)}{it.core ? <span className="muted"> · core</span> : null}</td>
+                <td>{questionLabel(it)}{it.core ? <span className="muted"> · ליבה</span> : null}</td>
                 <td className="num">{correctLabel(it.correct_pct)}</td>
                 <td>{optionLabels(it, row.n).join(' · ')}</td>
               </tr>

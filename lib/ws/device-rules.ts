@@ -1,8 +1,9 @@
 // Band → defaults and legality notes for devices and cycle depth (pure, unit tested).
-// Notes never block a save: the DB check constraints are the only hard gate.
+// 'error' notes block the save in the console and mirror ws_instantiate_curriculum's
+// device_not_allowed_for_band gate; 'warning' and 'info' never block.
 import type { Band, CycleDepth, DeviceMode } from './types';
 
-export type RuleLevel = 'warning' | 'info';
+export type RuleLevel = 'error' | 'warning' | 'info';
 export interface RuleNote { level: RuleLevel; text: string }
 export interface DeviceRuleInput { band: Band | null; cycleDepth: CycleDepth; deviceMode: DeviceMode }
 
@@ -53,7 +54,8 @@ export function groupDevices(
 export function deviceRuleNotes({ band, cycleDepth, deviceMode }: DeviceRuleInput): RuleNote[] {
   const notes: RuleNote[] = [];
   if (band && ELEMENTARY.includes(band) && PERSONAL_PHONE.includes(deviceMode)) {
-    notes.push({ level: 'warning', text: NO_PHONES_ELEMENTARY });
+    // a-b and c-d are a hard gate (the DB refuses them too); e-f stays a warning
+    notes.push({ level: LOWER_ELEMENTARY.includes(band) ? 'error' : 'warning', text: NO_PHONES_ELEMENTARY });
   }
   if (band === 'g-i' && PHONE_ONLY.includes(deviceMode)) {
     notes.push({ level: 'warning', text: PHONES_MIDDLE_APPROVAL });
@@ -66,6 +68,10 @@ export function deviceRuleNotes({ band, cycleDepth, deviceMode }: DeviceRuleInpu
   }
   return notes;
 }
+
+/** The first blocking note, or null. Forms refuse to save while this is set. */
+export const blockingNote = (notes: readonly RuleNote[]): RuleNote | null =>
+  notes.find((n) => n.level === 'error') ?? null;
 
 export interface TemplatePrefillSource {
   band: Band | null; cycle_depth: CycleDepth | null; default_device_mode: DeviceMode | null;

@@ -32,14 +32,17 @@ export function WorkshopPills({ band, depth, device }: { band: Band | null; dept
   );
 }
 
-/** Non-blocking legality notes from lib/ws/device-rules. Renders nothing when the list is empty. */
+const NOTE_CLASS: Record<RuleNote['level'], string> = {
+  error: styles.noteError, warning: styles.noteWarn, info: styles.noteInfo,
+};
+
+/** Legality notes from lib/ws/device-rules; 'error' ones block the save. Renders nothing when the list is empty. */
 export function RuleNotes({ notes }: { notes: readonly RuleNote[] }) {
   if (notes.length === 0) return null;
+  const blocking = notes.some((n) => n.level === 'error');
   return (
-    <ul className={styles.notes} role="status">
-      {notes.map((n) => (
-        <li key={n.text} className={n.level === 'warning' ? styles.noteWarn : styles.noteInfo}>{n.text}</li>
-      ))}
+    <ul className={styles.notes} role={blocking ? 'alert' : 'status'}>
+      {notes.map((n) => <li key={n.text} className={NOTE_CLASS[n.level]}>{n.text}</li>)}
     </ul>
   );
 }
