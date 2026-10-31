@@ -42,6 +42,35 @@ test('takeHomeUrl is <student url>/model/<token>, trailing slashes dropped, toke
   assert.equal(A.takeHomeUrl('a b', 'https://app.test'), 'https://app.test/model/a%20b');
 });
 
+test('joinUrl is <student url>/g/<token>, trailing slashes dropped, token url-encoded', () => {
+  assert.equal(A.joinUrl('https://app.test/', 'abcd2345efgh6789jkmn'), 'https://app.test/g/abcd2345efgh6789jkmn');
+  assert.equal(A.joinUrl(S.STUDENT_URL, 'abcd2345efgh6789jkmn'), `${S.STUDENT_URL}/g/abcd2345efgh6789jkmn`);
+  assert.equal(A.joinUrl('https://app.test', 'a/b'), 'https://app.test/g/a%2Fb');
+});
+
+test('workshopJoinUrl is <student url>/join?code=<code>, code url-encoded', () => {
+  assert.equal(A.workshopJoinUrl('https://app.test//', 'SDR-7'), 'https://app.test/join?code=SDR-7');
+  assert.equal(A.workshopJoinUrl('https://app.test', 'A B&C'), 'https://app.test/join?code=A%20B%26C');
+});
+
+test('fallbackLine names code and group and ends with the PIN label', () => {
+  assert.equal(A.fallbackLine('SDR-7', 3), 'אם אין מצלמה: קוד SDR-7, קבוצה 3, PIN');
+});
+
+test('isJoinToken accepts exactly 20 chars of [a-z2-9]', () => {
+  assert.equal(A.isJoinToken('abcd2345efgh6789jkmn'), true);
+  assert.equal(A.isJoinToken('abcd2345efgh6789jkm'), false);
+  assert.equal(A.isJoinToken('abcd2345efgh6789jkmnp'), false);
+  assert.equal(A.isJoinToken('ABCD2345efgh6789jkmn'), false);
+  assert.equal(A.isJoinToken('abcd1345efgh6789jkmn'), false);
+  assert.equal(A.isJoinToken('abcd0345efgh6789jkmn'), false);
+  assert.equal(A.isJoinToken(null), false);
+});
+
+test('scan copy carries no em dashes', () => {
+  for (const s of [A.SCAN_TITLE, A.SCAN_INSTRUCTION, A.CLASS_QR_TITLE, A.CLASS_QR_HINT]) assert.ok(!s.includes('—'), s);
+});
+
 test('isPin accepts exactly four digits', () => {
   assert.equal(A.isPin('0042'), true);
   assert.equal(A.isPin('123'), false);

@@ -38,5 +38,12 @@ export async function rotateGroupPin(groupId: string): Promise<string> {
   return data as string;
 }
 
+// join_token is not client-updatable (0014): a new one-scan token comes only from this RPC (staff).
+export async function rotateJoinToken(groupId: string): Promise<string> {
+  const { data, error } = await sb.rpc('ws_rotate_join_token', { p_group: groupId });
+  if (error) throw error;
+  return data as string;
+}
+
 // The two sc_* team keys of a group: the team itself and its personal variant.
 export const teamNames = (team: string): [string, string] => [team, 'אישי · ' + team];

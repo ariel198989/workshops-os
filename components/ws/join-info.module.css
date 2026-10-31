@@ -1,6 +1,14 @@
 .join{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12.5px}
 .inactive{flex-basis:100%;color:#92400E;font-size:12.5px}
 
+/* class-wide join QR (drawer + projector) */
+.classQr{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.classTitle{font-size:clamp(20px,2.4vw,30px);font-weight:700;color:var(--ink)}
+.classCode{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:clamp(20px,2.2vw,28px);font-weight:700;
+  letter-spacing:.08em;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 14px;unicode-bidi:isolate}
+.classHint{font-size:14px;color:var(--muted);margin:0}
+.closed{color:#92400E;font-size:14px;line-height:1.6;margin:0}
+
 /* phone: the join code is what the instructor reads out to the class, so it becomes a big copyable card */
 @media (max-width:640px){
   .join{display:flex;flex-direction:column;align-items:stretch;width:100%;gap:10px;padding:12px 14px;

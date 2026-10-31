@@ -135,6 +135,8 @@ export interface WsGroup extends Stamped {
   color: string | null; status: GroupStatus; activated_at: string | null; notes: string | null;
   // migration 0013: tablet sign-in PIN (4 digits, rotated via ws_rotate_group_pin), public take-home token
   pin: string | null; share_token: string | null; device_user_id: string | null;
+  // migration 0014: one-scan tablet sign-in token (20 chars [a-z2-9], rotated via ws_rotate_join_token)
+  join_token: string | null;
 }
 export interface WsParticipant extends Stamped {
   id: string; workshop_id: string; group_id: string | null; user_id: string | null; full_name: string;

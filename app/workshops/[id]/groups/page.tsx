@@ -3,16 +3,19 @@ import { useMemo, useState } from 'react';
 import { UserGroupIcon } from '@hugeicons/core-free-icons';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmButton } from '@/components/ws/ConfirmButton';
-import { Drawer } from '@/components/ws/Drawer';
 import { JoinInfo } from '@/components/ws/JoinInfo';
-import { QrCode } from '@/components/ws/QrCode';
+import { WorkshopJoinQr } from '@/components/ws/WorkshopJoinQr';
 import { toast } from '@/lib/store';
-import { activateGroups, rotateGroupPin, updateGroup } from '@/lib/ws/groups';
+import { STUDENT_URL } from '@/lib/student-app';
+import { entryCards } from '@/lib/ws/entry-cards';
+import { activateGroups, rotateGroupPin, rotateJoinToken, updateGroup } from '@/lib/ws/groups';
 import type { GroupPatch } from '@/lib/ws/types';
 import { CreateGroupsForm } from '@/components/ws/p4/CreateGroupsForm';
 import { DriftBanner } from '@/components/ws/p4/DriftBanner';
+import { EntryCardsPrint } from '@/components/ws/p4/EntryCardsPrint';
 import type { GroupAccessActions } from '@/components/ws/p4/GroupAccess';
 import { GroupCard } from '@/components/ws/p4/GroupCard';
+import { GroupQrDrawer, type QrTarget } from '@/components/ws/p4/GroupQrDrawer';
 import { LiveStepBar } from '@/components/ws/p4/LiveStepBar';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
 import { ProjectorGroups } from '@/components/ws/p4/ProjectorGroups';
@@ -26,7 +29,8 @@ import { POLL_MS, useBoard } from '@/components/ws/p4/useBoard';
 import { useLiveState } from '@/components/ws/p4/useLiveState';
 import styles from '@/components/ws/p4/board.module.css';
 
-interface QrTarget { title: string; url: string }
+// a page module may only export the route itself, so the projector QR size stays local
+const PROJECTOR_QR_SIZE = 220;
 
 export default function GroupsPage() {
   const id = useWorkshopId();
@@ -34,7 +38,9 @@ export default function GroupsPage() {
   const board = useBoard(id, canEdit);
   const liveHandle = useLiveState(id);
   const [projector, setProjector] = useState(false);
+  const [projectorQr, setProjectorQr] = useState(false);
   const [qr, setQr] = useState<QrTarget | null>(null);
+  const [printing, setPrinting] = useState(false);
   const { overview, people } = board;
 
   const active = useMemo(() => people.filter((p) => p.status === 'active'), [people]);
@@ -74,26 +80,31 @@ export default function GroupsPage() {
       throw new Error(errorText(err, 'החלפת ה-PIN נכשלה'));
     }
   };
+  const rotateToken = async (groupId: string) => {
+    try {
+      const join_token = await rotateJoinToken(groupId);
+      board.patchGroupRow(groupId, { join_token });
+      toast('קישור כניסה חדש נשמר. הישן כבר לא עובד', true);
+    } catch (err) {
+      throw new Error(errorText(err, 'החלפת קישור הכניסה נכשלה'));
+    }
+  };
 
   const groups = overview?.groups ?? [];
   const isLive = overview?.workshop.status === 'live';
   const stamp = formatTime(overview?.generated_at);
   const count = defaultGroupCount(board.workshop?.audience_size ?? (people.length || null), overview?.workshop.group_size ?? board.workshop?.group_size ?? 4);
-
-  const copyQr = async () => {
-    if (!qr) return;
-    try {
-      await navigator.clipboard.writeText(qr.url);
-      toast('הקישור הועתק', true);
-    } catch {
-      toast('ההעתקה נכשלה. סמנו והעתיקו ידנית');
-    }
-  };
+  const cards = useMemo(
+    () => (overview ? entryCards(groups, board.groupRows, overview.workshop.code, STUDENT_URL) : []),
+    [overview, groups, board.groupRows],
+  );
 
   return (
     <LoadGate loading={board.loading} error={board.error} hasData={!!overview} onRetry={() => void board.refresh()}>
       {overview && projector ? (
-        <ProjectorShell title={overview.workshop.title} stamp={stamp} live={liveHandle.live} onExit={() => setProjector(false)}>
+        <ProjectorShell title={overview.workshop.title} stamp={stamp} live={liveHandle.live} onExit={() => setProjector(false)}
+          tools={<button type="button" aria-pressed={projectorQr} onClick={() => setProjectorQr((v) => !v)}>{projectorQr ? 'הסתרת QR' : 'הצגת QR'}</button>}
+          aside={projectorQr ? <WorkshopJoinQr code={overview.workshop.code} live={isLive} size={PROJECTOR_QR_SIZE} heading /> : null}>
           <ProjectorGroups groups={groups} />
         </ProjectorShell>
       ) : null}
@@ -112,6 +123,7 @@ export default function GroupsPage() {
             <div className={styles.barEnd}>
               <button type="button" className="sm" onClick={() => void board.refresh()} disabled={board.refreshing}>רענון</button>
               {groups.length > 0 ? <button type="button" className="sm" onClick={() => setProjector(true)}>מצב מקרן</button> : null}
+              {groups.length > 0 ? <button type="button" className="sm" onClick={() => setPrinting(true)}>הדפסת כרטיסי כניסה</button> : null}
               {canEdit && isLive && hasInactiveGroups(groups) ? (
                 <ConfirmButton label="הפעל קבוצות" confirmText="להפעיל את הקבוצות באפליקציית התלמידים?" tone="primary" small
                   onConfirm={activate} />
@@ -137,8 +149,8 @@ export default function GroupsPage() {
               <div className={styles.grid}>
                 {groups.map((g) => {
                   const access: GroupAccessActions = {
-                    code: overview.workshop.code, row: rowById.get(g.group_id), onRotate: rotate,
-                    onShowQr: (title, url) => setQr({ title, url }),
+                    code: overview.workshop.code, row: rowById.get(g.group_id), onRotate: rotate, onRotateToken: rotateToken,
+                    onShowQr: setQr,
                   };
                   return (
                     <GroupCard key={g.group_id} group={g} members={byGroup.get(g.group_id) ?? []} subproblems={board.subproblems}
@@ -150,15 +162,8 @@ export default function GroupsPage() {
             </>
           )}
 
-          <Drawer open={qr !== null} title={qr ? `לוקחים הביתה: ${qr.title}` : ''} onClose={() => setQr(null)}>
-            {qr ? (
-              <div className={styles.qrBig}>
-                <QrCode value={qr.url} size={260} label={`קוד QR לדף המודל של ${qr.title}`} />
-                <code dir="ltr">{qr.url}</code>
-                <button type="button" onClick={() => void copyQr()}>העתקת קישור</button>
-              </div>
-            ) : null}
-          </Drawer>
+          <GroupQrDrawer target={qr} onClose={() => setQr(null)} />
+          {printing ? <EntryCardsPrint cards={cards} onDone={() => setPrinting(false)} /> : null}
         </>
       ) : null}
     </LoadGate>

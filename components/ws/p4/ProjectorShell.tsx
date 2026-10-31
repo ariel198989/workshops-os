@@ -8,12 +8,16 @@ interface ProjectorShellProps {
   stamp: string | null;
   /** the facilitator's current step, shown large above the groups */
   live?: LiveState | null;
+  /** extra controls in the header row, e.g. the QR toggle */
+  tools?: ReactNode;
+  /** shown beside the live label (the class join QR) */
+  aside?: ReactNode;
   onExit: () => void;
   children: ReactNode;
 }
 
 /** Full-screen overlay for projecting the board to the class. Esc or the exit button leaves. */
-export function ProjectorShell({ title, stamp, live = null, onExit, children }: ProjectorShellProps) {
+export function ProjectorShell({ title, stamp, live = null, tools, aside, onExit, children }: ProjectorShellProps) {
   const exitRef = useRef(onExit);
   useEffect(() => {
     exitRef.current = onExit;
@@ -37,19 +41,26 @@ export function ProjectorShell({ title, stamp, live = null, onExit, children }: 
     };
   }, []);
 
+  const hasLive = !!live && (!!live.label || !!live.message);
   return (
     <div className={styles.projector} role="dialog" aria-label="מצב מקרן">
       <div className={styles.projHead}>
         <h2>{title}</h2>
         <div className={styles.barEnd}>
           {stamp ? <span className={styles.stamp}>עודכן ב-{stamp}</span> : null}
+          {tools}
           <button type="button" onClick={onExit}>יציאה ממצב מקרן</button>
         </div>
       </div>
-      {live && (live.label || live.message) ? (
-        <div className={styles.projLive} role="status">
-          {live.label ? <b>{live.label}</b> : null}
-          {live.message ? <span>{live.message}</span> : null}
+      {hasLive || aside ? (
+        <div className={styles.projTop}>
+          {hasLive ? (
+            <div className={styles.projLive} role="status">
+              {live.label ? <b>{live.label}</b> : null}
+              {live.message ? <span>{live.message}</span> : null}
+            </div>
+          ) : null}
+          {aside ? <div className={styles.projQr}>{aside}</div> : null}
         </div>
       ) : null}
       <div>{children}</div>

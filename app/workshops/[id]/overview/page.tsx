@@ -1,9 +1,13 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { listEvents, eventLabel } from '@/lib/ws/events';
+import { CLASS_QR_TITLE } from '@/lib/ws/group-access';
 import { fetchOverview } from '@/lib/ws/workshops';
 import type { Overview, WsEvent } from '@/lib/ws/types';
+import { Drawer } from '@/components/ws/Drawer';
 import { JoinInfo } from '@/components/ws/JoinInfo';
+import { WorkshopJoinQr } from '@/components/ws/WorkshopJoinQr';
 import { InstantiateEmpty } from '@/components/ws/p4/InstantiateEmpty';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
 import { SessionTimeline } from '@/components/ws/p4/SessionTimeline';
@@ -60,6 +64,7 @@ export default function OverviewPage() {
   const id = useWorkshopId();
   const canEdit = useCanEdit(id);
   const { data, error, loading, reload } = useLoader(() => loadAll(id), id);
+  const [classQr, setClassQr] = useState(false);
   const overview = data?.overview;
 
   return (
@@ -71,8 +76,13 @@ export default function OverviewPage() {
             <div className={styles.barEnd}>
               <span className={styles.stamp}>עודכן ב-{formatTime(overview.generated_at)}</span>
               <button type="button" className="sm" onClick={() => void reload()}>רענון</button>
+              <button type="button" className="sm" onClick={() => setClassQr(true)}>QR לכיתה</button>
             </div>
           </div>
+
+          <Drawer open={classQr} title={CLASS_QR_TITLE} onClose={() => setClassQr(false)}>
+            <WorkshopJoinQr code={overview.workshop.code} live={overview.workshop.status === 'live'} />
+          </Drawer>
 
           <StatRow totals={overview.totals} />
 
