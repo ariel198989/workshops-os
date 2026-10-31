@@ -225,6 +225,22 @@ test('every action the ws_* SQL writes to ws_events has a Hebrew label', () => {
   assert.equal(E.eventLabel(evt('participant.joined')), 'תלמיד/ה הצטרפו לקבוצה');
 });
 
+// ── live training panel helpers ───────────────────────────────────────
+test('training helpers: team keys include the personal variant, group lookup resolves both, reasons are trimmed', async () => {
+  const TR = await import('../components/ws/p4/training-utils.ts');
+  const groups = [{ team_name: 'אופק · קבוצה 1', number: 1 }, { team_name: 'אופק · קבוצה 2', number: 2 }];
+  assert.deepEqual(TR.jobTeamKeys(groups), ['אופק · קבוצה 1', 'אישי · אופק · קבוצה 1', 'אופק · קבוצה 2', 'אישי · אופק · קבוצה 2']);
+  assert.deepEqual(TR.jobTeamKeys([groups[0], groups[0]]).length, 2);
+  assert.equal(TR.groupNumberForTeam(groups, 'אישי · אופק · קבוצה 2'), 2);
+  assert.equal(TR.groupNumberForTeam(groups, 'אופק · קבוצה 1'), 1);
+  assert.equal(TR.groupNumberForTeam(groups, 'מישהו אחר'), null);
+  assert.equal(TR.cleanFailReason(null), null);
+  assert.equal(TR.cleanFailReason('   '), null);
+  assert.equal(TR.cleanFailReason('  נגמר הזמן ב-Colab '), 'נגמר הזמן ב-Colab');
+  assert.equal(TR.cleanFailReason('א'.repeat(300))?.length, 200);
+  for (const s of ['pending', 'running', 'done', 'failed'] as const) assert.match(TR.JOB_STATUS_LABELS[s], /[\u0590-\u05FF]/);
+});
+
 // ── curriculum.json mapping / roster cleaning ─────────────────────────
 test('moduleRowFromJson yields a DB-valid slug, type and duration', () => {
   const row = K.moduleRowFromJson({

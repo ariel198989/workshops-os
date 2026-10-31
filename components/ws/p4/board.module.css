@@ -100,6 +100,21 @@
 .unlinked{width:.55em;height:.55em;border-radius:50%;border:1px solid #94A3B8;flex-shrink:0}
 .emptyMembers{color:var(--faint);font-size:.95em}
 
+/* ---------- training panel (open sc_training_jobs of this workshop's teams) ---------- */
+.training{padding:12px 16px;margin-bottom:14px}
+.trainingHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.trainingHead h3{font-size:13.5px;font-weight:600;color:var(--ink)}
+.trainingTools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.colab{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;font-size:12px;font-weight:600;border-radius:var(--radius);
+  border:1px solid var(--cy);color:var(--cy-text);background:#fff}
+.colab:hover{background:var(--cy-soft);text-decoration:none}
+.jobs{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.job{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);
+  background:#fff;font-size:13px}
+.jobTeam{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.jobTeam b{color:var(--ink);font-weight:600;white-space:nowrap}
+.jobMeta{color:var(--muted);font-size:12.5px;margin-inline-start:auto}
+
 /* ---------- empty / create ---------- */
 .createBox{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
 .createBox input{width:84px}
@@ -132,6 +147,12 @@
   .facts{grid-template-columns:repeat(2,1fr);gap:.6em .4em}
   .member{min-height:36px;padding:.3em .8em}
   .tray{padding:12px 14px}
+  .training{padding:12px 14px}
+  .trainingHead,.trainingTools{flex-direction:column;align-items:stretch}
+  .colab{min-height:44px;justify-content:center;font-size:14px}
+  .job{flex-direction:column;align-items:stretch}
+  .jobMeta{margin-inline-start:0}
+  .job button{width:100%}
   .drift li{align-items:flex-start;flex-direction:column;gap:6px}
   .drift li button{width:100%}
   .createBox{flex-direction:column;align-items:stretch}

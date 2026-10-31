@@ -12,6 +12,7 @@ import { DriftBanner } from '@/components/ws/p4/DriftBanner';
 import { GroupCard } from '@/components/ws/p4/GroupCard';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
 import { ProjectorShell } from '@/components/ws/p4/ProjectorShell';
+import { TrainingPanel } from '@/components/ws/p4/TrainingPanel';
 import { UnassignedTray } from '@/components/ws/p4/UnassignedTray';
 import { defaultGroupCount, hasInactiveGroups } from '@/components/ws/p4/groups-utils';
 import { formatTime } from '@/components/ws/p4/format';
@@ -95,6 +96,8 @@ export default function GroupsPage() {
           </div>
 
           <DriftBanner drift={board.drift} canEdit={canEdit} movable={movable} onSync={(pid) => void board.resync(pid)} />
+
+          {groups.length > 0 ? <TrainingPanel groups={groups} canEdit={canEdit} refreshKey={overview.generated_at} /> : null}
 
           {groups.length === 0 ? (
             <EmptyState icon={UserGroupIcon} title="עדיין אין קבוצות"
