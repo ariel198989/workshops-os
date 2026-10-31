@@ -98,6 +98,16 @@ export function OrgContacts({ orgId, contacts, canEdit, onChange }: OrgContactsP
   };
 
   const set = (k: keyof typeof BLANK) => (v: string) => setDraft((d) => ({ ...d, [k]: v }));
+  const field = (k: keyof typeof BLANK, label: string, type = 'text', ltr = false) => {
+    const id = `contact-${k}`;
+    return (
+      <span key={k} className={styles.assignField}>
+        <label htmlFor={id} className="sr-only">{label}</label>
+        <input id={id} type={type} dir={ltr ? 'ltr' : undefined} placeholder={label} value={draft[k]}
+          onChange={(e) => set(k)(e.target.value)} />
+      </span>
+    );
+  };
   return (
     <section className={`hud ${styles.card}`}>
       <div className={styles.cardHead}><h2>אנשי קשר</h2></div>
@@ -105,10 +115,10 @@ export function OrgContacts({ orgId, contacts, canEdit, onChange }: OrgContactsP
         empty={<p className="hint">אין אנשי קשר. הוסיפו את הראשון בשורה למטה.</p>} />
       {canEdit ? (
         <div className={styles.assign}>
-          <input type="text" placeholder="שם" value={draft.full_name} onChange={(e) => set('full_name')(e.target.value)} />
-          <input type="text" placeholder="תפקיד" value={draft.role_title} onChange={(e) => set('role_title')(e.target.value)} />
-          <input type="email" dir="ltr" placeholder="אימייל" value={draft.email} onChange={(e) => set('email')(e.target.value)} />
-          <input type="text" dir="ltr" placeholder="טלפון" value={draft.phone} onChange={(e) => set('phone')(e.target.value)} />
+          {field('full_name', 'שם')}
+          {field('role_title', 'תפקיד')}
+          {field('email', 'אימייל', 'email', true)}
+          {field('phone', 'טלפון', 'text', true)}
           <button type="button" className="primary" disabled={busy || !draft.full_name.trim()} onClick={() => void add()}>
             הוספה
           </button>

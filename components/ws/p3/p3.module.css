@@ -36,12 +36,13 @@
 .orgPick{display:flex;gap:8px;align-items:center}
 .orgPick select{flex:1}
 
-.link{color:var(--cy);font-weight:500}
+.link{color:var(--cy-text);font-weight:500}
 .rowActions{display:flex;gap:6px;align-items:center;justify-content:flex-end}
 .primaryMark{font-size:12px}
 
 .assign{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .assign select{width:auto;min-width:150px}
+.assignField{display:contents}
 .inputEmail{width:auto;min-width:230px}
 .inputName{width:auto;min-width:160px}
 .scopeSelect{width:auto;min-width:170px}

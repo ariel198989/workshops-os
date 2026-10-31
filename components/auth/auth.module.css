@@ -2,10 +2,14 @@
 .title{margin:18px 0 14px;font-size:16px;font-weight:600}
 .field{display:block;margin-bottom:12px}
 .full{width:100%}
-.studentLine{margin-top:16px;text-align:center}
+.studentLine{margin-top:12px;text-align:center}
+/* the student-app link is the one thing a lost student taps on this screen: a full 44px target */
+.studentLine a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 12px;
+  border-radius:var(--radius);font-weight:500}
+.studentLine a:hover{background:var(--cy-soft);text-decoration:none}
 .primaryLink{display:inline-flex;align-items:center;padding:8px 14px;border-radius:var(--radius);
-  border:1px solid var(--cy);background:var(--cy);color:#fff;font-size:13px;font-weight:600;text-decoration:none}
-.primaryLink:hover{background:#12807A;border-color:#12807A;color:#fff;text-decoration:none}
+  border:1px solid var(--cy-text);background:var(--cy-text);color:#fff;font-size:13px;font-weight:600;text-decoration:none}
+.primaryLink:hover{background:#0B5F5A;border-color:#0B5F5A;color:#fff;text-decoration:none}
 
 @media (max-width:640px){
   .card{padding:24px 18px 20px}

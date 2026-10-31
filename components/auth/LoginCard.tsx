@@ -25,7 +25,7 @@ export function LoginCard() {
   };
 
   return (
-    <div className="center-screen">
+    <main className="center-screen">
       <div className={`hud ${styles.card}`}>
         <h1 className="wordmark">Workshops OS</h1>
         <p className="by">by Corewise</p>
@@ -50,6 +50,6 @@ export function LoginCard() {
           תלמיד/ה? <a href={STUDENT_URL}>ההרשמה באפליקציית התלמידים</a>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

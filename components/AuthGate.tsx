@@ -8,7 +8,7 @@ import { LoginCard } from '@/components/auth/LoginCard';
 
 function NoAccess({ email }: { email?: string }) {
   return (
-    <div className="center-screen">
+    <main className="center-screen">
       <div className="hud denied">
         <h1>לא הצלחנו לטעון את החשבון</h1>
         <p className="muted">
@@ -19,7 +19,7 @@ function NoAccess({ email }: { email?: string }) {
           <button onClick={() => void logout()}>התנתקות</button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -48,7 +48,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }, [userId]);
 
   if (!loaded || (user && !whoamiLoaded)) {
-    return <div className="center-screen"><Spinner large /></div>;
+    return <main className="center-screen"><Spinner large /></main>;
   }
   if (!user) return <LoginCard />;
   if (!whoami) return <NoAccess email={user.email} />;

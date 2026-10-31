@@ -11,7 +11,8 @@
     transition:color .15s}
   .item span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item:focus-visible{outline:2px solid var(--cy);outline-offset:-2px;border-radius:var(--radius)}
-  .item.on{color:var(--cy);font-weight:600}
+  .item.on{color:var(--cy-text);font-weight:600}
+  .item.on svg{color:var(--cy)}
 
   .backdrop{display:block;position:fixed;inset:0;z-index:51;background:rgba(15,28,46,.32);animation:mn-fade .2s ease}
   .sheet{display:flex;flex-direction:column;position:fixed;inset-inline:0;bottom:0;z-index:52;max-height:85vh;overflow:auto;
@@ -24,7 +25,8 @@
   .sheetItem{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 6px;color:var(--ink);font-size:15px;
     border-radius:var(--radius)}
   .sheetItem:hover{text-decoration:none;background:#F1F5F9}
-  .sheetItem.on{color:var(--cy);background:var(--cy-soft);font-weight:600}
+  .sheetItem.on{color:var(--cy-text);background:var(--cy-soft);font-weight:600}
+  .sheetItem.on svg{color:var(--cy)}
   .sheetUser{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
   .who{flex:1;min-width:0;font-size:13px;line-height:1.3}
   .who b{display:block;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

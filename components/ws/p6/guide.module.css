@@ -45,7 +45,7 @@
 .option{display:flex;align-items:baseline;gap:8px;padding:4px 10px;border-radius:5px;font-size:14px}
 .optMark{flex:0 0 auto;width:18px;font-family:var(--font-num);font-size:12px;color:var(--faint)}
 .correct{background:var(--cy-soft);color:#0B5F5A;font-weight:500}
-.correct .optMark{color:var(--cy);font-weight:700}
+.correct .optMark{color:var(--cy-text);font-weight:700}
 
 /* materials checklist */
 .materials{margin:0;padding:0;list-style:none;display:grid;gap:4px}
@@ -57,7 +57,7 @@
 
 /* facilitator notes */
 .noteBlock{margin-bottom:22px}
-.noteTitle{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--cy);letter-spacing:.04em}
+.noteTitle{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--cy-text);letter-spacing:.04em}
 .agendaRows{display:grid;gap:0}
 .agendaRow{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid #EEF2F6}
 .agendaRow:last-child{border-bottom:none}

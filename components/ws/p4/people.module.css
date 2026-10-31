@@ -17,7 +17,7 @@
   padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius)}
 
 .account{display:inline-flex;align-items:center;gap:8px}
-.tick{color:var(--cy);font-weight:700}
+.tick{color:var(--cy-text);font-weight:700}
 .rowActions{display:flex;align-items:center;gap:6px;justify-content:flex-end}
 .dim{opacity:.55}
 

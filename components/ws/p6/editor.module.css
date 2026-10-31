@@ -39,7 +39,7 @@
   .listRow{flex-wrap:wrap}
   .listRow input,.listRow textarea{flex:1 1 100%}
   .rowTools{width:100%;justify-content:flex-end}
-  .rowTools button{min-height:40px;padding:6px 12px}
+  .rowTools button{min-height:44px;padding:6px 12px}
   .checkRow{min-height:44px}
   /* the sticky save bar sits above the phone tab bar */
   .bar{bottom:calc(56px + env(safe-area-inset-bottom))}

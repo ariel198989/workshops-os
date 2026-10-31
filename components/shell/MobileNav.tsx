@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -9,6 +9,7 @@ import { isActive, mobileLabel, splitMobileNav, visibleNavItems } from '@/lib/na
 import { roleLabel } from '@/lib/shell-access';
 import { useStore } from '@/lib/store';
 import { wsAuthStore } from '@/lib/ws/staff';
+import { trapTab } from '../ws/Drawer';
 import { NAV_ICONS } from './nav-icons';
 import styles from './mobile-nav.module.css';
 
@@ -26,19 +27,27 @@ export function MobileNav() {
   const role = whoami?.staff?.role ?? null;
   const email = user?.email ?? '';
   const [open, setOpen] = useState(false);
+  const moreBtn = useRef<HTMLButtonElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
   const { primary, more } = splitMobileNav(visibleNavItems(role));
   const moreOn = more.some((item) => isActive(pathname, item.href));
 
   // navigating (from the sheet or anywhere else) closes the sheet
   useEffect(() => { setOpen(false); }, [pathname]);
 
+  // open: focus moves into the sheet and Tab stays there; close: focus returns to the "עוד" button
   useEffect(() => {
     if (!open) return;
+    sheet.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
+      else if (sheet.current) trapTab(e, sheet.current);
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      moreBtn.current?.focus();
+    };
   }, [open]);
 
   return (
@@ -54,7 +63,7 @@ export function MobileNav() {
             </Link>
           );
         })}
-        <button type="button" className={moreOn || open ? `${styles.item} ${styles.on}` : styles.item}
+        <button ref={moreBtn} type="button" className={moreOn || open ? `${styles.item} ${styles.on}` : styles.item}
           aria-expanded={open} aria-controls="mobile-more" onClick={() => setOpen((v) => !v)}>
           <HugeiconsIcon icon={MoreHorizontalIcon} size={22} />
           <span>{MORE_LABEL}</span>
@@ -64,7 +73,8 @@ export function MobileNav() {
       {open ? (
         <>
           <div className={styles.backdrop} onClick={() => setOpen(false)} aria-hidden="true" />
-          <div id="mobile-more" className={styles.sheet} role="dialog" aria-modal="true" aria-label={MORE_LABEL}>
+          <div id="mobile-more" ref={sheet} className={styles.sheet} role="dialog" aria-modal="true" aria-label={MORE_LABEL}
+            tabIndex={-1}>
             <div className={styles.sheetHead}>
               <span className="wordmark">Workshops OS</span>
               <button type="button" className="ghost" onClick={() => setOpen(false)}>סגירה</button>

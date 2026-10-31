@@ -145,7 +145,7 @@
   .teamChip{white-space:normal;overflow-wrap:anywhere}
   .copy{min-height:44px;padding:.3em .9em}
   .facts{grid-template-columns:repeat(2,1fr);gap:.6em .4em}
-  .member{min-height:36px;padding:.3em .8em}
+  .member{min-height:44px;padding:.3em .8em}
   .tray{padding:12px 14px}
   .training{padding:12px 14px}
   .trainingHead,.trainingTools{flex-direction:column;align-items:stretch}

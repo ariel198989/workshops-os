@@ -19,7 +19,7 @@
 .tableWrap{overflow:auto;max-height:calc(100vh - 220px)}
 .sortBtn{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:inherit;font:inherit}
 .sortBtn:focus-visible{outline:2px solid var(--cy);outline-offset:2px;border-radius:3px}
-.sortArrow{font-size:10px;color:var(--cy)}
+.sortArrow{font-size:10px;color:var(--cy-text)}
 .clickable{cursor:pointer}
 .clickable:focus-visible{outline:2px solid var(--cy);outline-offset:-2px}
 .tableWrap .dense td{padding:6px 12px}
@@ -59,7 +59,7 @@
 .tab{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;font-size:14px;color:var(--muted);
   white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab:hover{color:var(--ink);text-decoration:none;background:#F1F5F9}
-.tabOn{color:var(--cy);border-bottom-color:var(--cy);font-weight:600}
+.tabOn{color:var(--cy-text);border-bottom-color:var(--cy);font-weight:600}
 .tabCount{font-size:11px;padding:0 6px;border-radius:999px;background:#EEF2F6;color:var(--muted)}
 
 /* ---------- CustomFieldsForm ---------- */
@@ -157,7 +157,7 @@
   /* pills wrap, chips and option buttons get 44px targets */
   .pill{white-space:normal;text-align:start}
   .optionChip,.chip{min-height:44px;font-size:14px}
-  .chipX{width:28px;height:28px}
+  .chipX{width:44px;height:44px}
   .chipsBox{padding:6px 8px}
   .chipsBox input[type=text]{min-height:32px}
 
