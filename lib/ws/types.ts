@@ -26,6 +26,9 @@ export const DEVICE_MODES = [
   'travelling_kit', 'adult_laptop',
 ] as const;
 export const RELEASE_STATUSES = ['live', 'draft', 'blocked'] as const;
+// migration 20261101_0016: who shares photos, tags and the model. 'personal' = every student their own pool and
+// model (default); 'group' = one pool and one model for the whole group. Merging is a later facilitator feature.
+export const POOL_SCOPES = ['personal', 'group'] as const;
 
 export type WorkshopStatus = (typeof WORKSHOP_STATUSES)[number];
 export type SessionStatus = (typeof SESSION_STATUSES)[number];
@@ -45,6 +48,7 @@ export type CycleDepth = (typeof CYCLE_DEPTHS)[number];
 export type Band = (typeof BANDS)[number];
 export type DeviceMode = (typeof DEVICE_MODES)[number];
 export type ReleaseStatus = (typeof RELEASE_STATUSES)[number];
+export type PoolScope = (typeof POOL_SCOPES)[number];
 
 export type OrgKind = 'school' | 'company' | 'municipality' | 'ngo' | 'other';
 export type ModuleType = 'theory' | 'practice' | 'demo' | 'mixed';
@@ -105,6 +109,8 @@ export interface WsWorkshop extends Stamped {
   // migration 0015: 4-digit workshop number children type in the student app; set by the DB when the
   // status becomes confirmed/live, null otherwise, rotated via ws_rotate_short_code (not client-updatable)
   short_code: string | null;
+  // migration 0016: personal (default) or group pool; update-granted to staff, not in the insert grant
+  pool_scope: PoolScope;
 }
 export interface WsWorkshopStaff { workshop_id: string; user_id: string; role: WorkshopRole; created_at: string }
 export interface WsSession extends Stamped {
@@ -175,7 +181,8 @@ export type WorkshopInsert = Pick<WsWorkshop, 'organization_id' | 'code' | 'team
   Partial<Pick<WsWorkshop, 'format' | 'template_id' | 'starts_on' | 'ends_on' | 'timezone' | 'sector'
     | 'grade_level' | 'class_label' | 'homeroom_teacher' | 'audience_size' | 'group_size' | 'location'
     | 'device_mode' | 'cycle_depth' | 'band' | 'tablets_count' | 'sc_campaign_id' | 'custom_fields' | 'notes'>>;
-export type WorkshopPatch = Partial<WorkshopInsert>;
+// pool_scope is update-only (0016 grants update, not insert): the new-workshop form saves it right after the insert
+export type WorkshopPatch = Partial<WorkshopInsert> & Partial<Pick<WsWorkshop, 'pool_scope'>>;
 export type GroupPatch = Partial<Pick<WsGroup, 'display_name' | 'subproblem_id' | 'capacity' | 'color' | 'notes' | 'status'>>;
 export type ParticipantPatch = Partial<Pick<WsParticipant, 'full_name' | 'grade' | 'roles' | 'status'
   | 'media_consent' | 'joined_at' | 'notes' | 'custom_fields'>>;

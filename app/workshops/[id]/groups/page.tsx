@@ -9,6 +9,7 @@ import { toast } from '@/lib/store';
 import { STUDENT_URL } from '@/lib/student-app';
 import { entryCards } from '@/lib/ws/entry-cards';
 import { activateGroups, rotateGroupPin, rotateJoinToken, updateGroup } from '@/lib/ws/groups';
+import { normalizePoolScope } from '@/lib/ws/pool-scope';
 import type { GroupPatch } from '@/lib/ws/types';
 import { CreateGroupsForm } from '@/components/ws/p4/CreateGroupsForm';
 import { DriftBanner } from '@/components/ws/p4/DriftBanner';
@@ -95,6 +96,8 @@ export default function GroupsPage() {
   const stamp = formatTime(overview?.generated_at);
   const count = defaultGroupCount(board.workshop?.audience_size ?? (people.length || null), overview?.workshop.group_size ?? board.workshop?.group_size ?? 4);
   const shortCode = board.workshop?.short_code ?? null;
+  // the overview RPC does not carry pool_scope; the workshop row does (DB default 'personal' until it loads)
+  const poolScope = normalizePoolScope(board.workshop?.pool_scope);
   const cards = useMemo(
     () => (overview ? entryCards(groups, board.groupRows, overview.workshop.code, STUDENT_URL, shortCode) : []),
     [overview, groups, board.groupRows, shortCode],
@@ -108,7 +111,7 @@ export default function GroupsPage() {
           aside={projectorQr
             ? <WorkshopJoinQr code={overview.workshop.code} shortCode={shortCode} live={isLive} size={PROJECTOR_QR_SIZE} heading />
             : null}>
-          <ProjectorGroups groups={groups} />
+          <ProjectorGroups groups={groups} poolScope={poolScope} />
         </ProjectorShell>
       ) : null}
 
@@ -141,7 +144,7 @@ export default function GroupsPage() {
           <DriftBanner drift={board.drift} canEdit={canEdit} movable={movable} onSync={(pid) => void board.resync(pid)} />
 
           {groups.length > 0 ? <LiveStepBar workshopId={id} sessions={overview.sessions} canEdit={canEdit} handle={liveHandle} /> : null}
-          {groups.length > 0 ? <TrainingPanel groups={groups} canEdit={canEdit} refreshKey={overview.generated_at} /> : null}
+          {groups.length > 0 ? <TrainingPanel groups={groups} canEdit={canEdit} refreshKey={overview.generated_at} poolScope={poolScope} /> : null}
 
           {groups.length === 0 ? (
             <EmptyState icon={UserGroupIcon} title="עדיין אין קבוצות"
@@ -158,7 +161,7 @@ export default function GroupsPage() {
                   };
                   return (
                     <GroupCard key={g.group_id} group={g} members={byGroup.get(g.group_id) ?? []} subproblems={board.subproblems}
-                      allGroups={groups} canEdit={canEdit} access={access}
+                      allGroups={groups} canEdit={canEdit} access={access} poolScope={poolScope}
                       onMove={(pid, gid) => void board.move(pid, gid)} onPatch={patchGroup} />
                   );
                 })}

@@ -3,7 +3,8 @@ import { useState, type DragEvent } from 'react';
 import { InlineEdit, type InlineOption } from '@/components/ws/InlineEdit';
 import { Pill } from '@/components/ws/StatusPill';
 import type { ParticipantWithGroup } from '@/lib/ws/participants';
-import type { GroupPatch, OverviewGroup, TaskType, WsSubproblem } from '@/lib/ws/types';
+import { DEFAULT_POOL_SCOPE, photosFactLabel } from '@/lib/ws/pool-scope';
+import type { GroupPatch, OverviewGroup, PoolScope, TaskType, WsSubproblem } from '@/lib/ws/types';
 import { CoverageList } from './CoverageList';
 import { MEMBER_MIME, parseMemberDrag } from './drag';
 import { GroupAccess, type GroupAccessActions } from './GroupAccess';
@@ -28,6 +29,8 @@ interface GroupCardProps {
   projector?: boolean;
   /** tablet sign-in (PIN) and take-home link block; omitted on the projector */
   access?: GroupAccessActions;
+  /** workshop pool scope (0016): a personal pool labels the photo count as the sum over every student */
+  poolScope?: PoolScope;
   onMove: (participantId: string, groupId: string | null) => void;
   onPatch: (groupId: string, patch: GroupPatch) => Promise<void>;
 }
@@ -50,7 +53,7 @@ function SubproblemLine({ group, subproblems, editable, onPatch }: {
 }
 
 export function GroupCard({
-  group, members, subproblems, allGroups, canEdit, projector = false, access, onMove, onPatch,
+  group, members, subproblems, allGroups, canEdit, projector = false, access, poolScope = DEFAULT_POOL_SCOPE, onMove, onPatch,
 }: GroupCardProps) {
   const [over, setOver] = useState(false);
   const editable = canEdit && !projector;
@@ -91,7 +94,7 @@ export function GroupCard({
       <SubproblemLine group={group} subproblems={subproblems} editable={editable} onPatch={patch} />
 
       <dl className={styles.facts}>
-        {[['תמונות', group.photos], ['מתויגות', group.tagged], ['לא מתויגות', group.untagged], ['היום', group.today]].map(([label, value]) => (
+        {[[photosFactLabel(poolScope), group.photos], ['מתויגות', group.tagged], ['לא מתויגות', group.untagged], ['היום', group.today]].map(([label, value]) => (
           <div key={label} className={styles.fact}>
             <dt className={styles.factLbl}>{label}</dt>
             <dd className={styles.factVal}>{value}</dd>

@@ -1,5 +1,7 @@
 'use client';
+import { toast } from '@/lib/store';
 import { blockingNote, deviceRuleNotes } from '@/lib/ws/device-rules';
+import { POOL_SCOPE_QUESTION, normalizePoolScope } from '@/lib/ws/pool-scope';
 import { updateWorkshop } from '@/lib/ws/workshops';
 import type { Band, CycleDepth, DeviceMode, WorkshopPatch, WsWorkshop } from '@/lib/ws/types';
 import { InlineEdit } from '../InlineEdit';
@@ -8,6 +10,7 @@ import { RuleNotes } from './BandPills';
 import { withFriendlyError } from './db-errors';
 import { KvField } from './KvField';
 import { BAND_OPTIONS, CYCLE_DEPTH_OPTIONS, DEVICE_OPTIONS } from './options';
+import { PoolScopeField } from './PoolScopeField';
 import { normalizeCode, validateCode, validateTeamPrefix } from './workshop-utils';
 import styles from './p3.module.css';
 
@@ -29,6 +32,8 @@ const TEXT: readonly { key: TextKey; label: string }[] = [
 const NUM: readonly { key: NumKey; label: string }[] = [
   { key: 'audience_size', label: 'מספר משתתפים' }, { key: 'tablets_count', label: 'מספר טאבלטים' },
 ];
+// InlineEdit shows save errors itself; the segmented control has no error slot, so it toasts
+const errText = (err: unknown): string => (err instanceof Error && err.message ? err.message : 'השמירה נכשלה');
 
 export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }: WorkshopFieldsProps) {
   const save = async (patch: WorkshopPatch) => {
@@ -97,6 +102,10 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
               guard(w.band, v as DeviceMode);
               return save({ device_mode: v as DeviceMode });
             }} />
+        </KvField>
+        <KvField label={POOL_SCOPE_QUESTION} wide>
+          <PoolScopeField value={normalizePoolScope(w.pool_scope)} disabled={off}
+            onChange={(pool_scope) => save({ pool_scope }).catch((err: unknown) => toast(errText(err)))} />
         </KvField>
         {TEXT.map((f) => (
           <KvField key={f.key} label={f.label}>

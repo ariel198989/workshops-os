@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { Pill } from '@/components/ws/StatusPill';
 import { COLAB } from '@/lib/config';
 import { toast } from '@/lib/store';
+import { DEFAULT_POOL_SCOPE, trainingPanelTitle } from '@/lib/ws/pool-scope';
 import { failTrainingJob, listOpenTrainingJobs, type TrainingJob } from '@/lib/ws/training';
-import type { OverviewGroup } from '@/lib/ws/types';
+import type { OverviewGroup, PoolScope } from '@/lib/ws/types';
 import { formatDateTime } from './format';
 import { errorText, useLoader } from './hooks';
 import {
@@ -18,6 +19,8 @@ interface TrainingPanelProps {
   canEdit: boolean;
   /** changes whenever the board refreshes (overview.generated_at), so the panel reloads with it */
   refreshKey: string;
+  /** workshop pool scope (0016): a personal pool titles the panel "אימונים אישיים"; the job list is the same */
+  poolScope?: PoolScope;
 }
 
 const TONE: Record<TrainingJob['status'], 'amber' | 'blue' | 'green' | 'red'> = {
@@ -25,7 +28,7 @@ const TONE: Record<TrainingJob['status'], 'amber' | 'blue' | 'green' | 'red'> = 
 };
 
 /** Live-session view of the Smart City trainer: open jobs of this workshop's teams, Colab link, fail action. */
-export function TrainingPanel({ groups, canEdit, refreshKey }: TrainingPanelProps) {
+export function TrainingPanel({ groups, canEdit, refreshKey, poolScope = DEFAULT_POOL_SCOPE }: TrainingPanelProps) {
   const keys = jobTeamKeys(groups);
   const { data: jobs, error, loading, reload } = useLoader(() => listOpenTrainingJobs(keys), `${keys.join('|')}#${refreshKey}`);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -51,7 +54,7 @@ export function TrainingPanel({ groups, canEdit, refreshKey }: TrainingPanelProp
   return (
     <section className={`hud ${styles.training}`} aria-label="אימונים">
       <header className={styles.trainingHead}>
-        <h3>אימונים פתוחים</h3>
+        <h3>{trainingPanelTitle(poolScope)}</h3>
         <div className={styles.trainingTools}>
           <button type="button" className="sm" onClick={() => void reload()} disabled={loading}>רענון</button>
           <a href={COLAB} target="_blank" rel="noopener noreferrer" className={styles.colab}>פתיחת המאמן (Colab)</a>

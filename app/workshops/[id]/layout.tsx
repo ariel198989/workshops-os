@@ -14,6 +14,7 @@ import styles from '@/components/ws/p3/p3.module.css';
 import { bumpData, dataVersion, toast, useStore } from '@/lib/store';
 import { listGroups } from '@/lib/ws/groups';
 import { getOrganization } from '@/lib/ws/orgs';
+import { normalizePoolScope } from '@/lib/ws/pool-scope';
 import { canEdit, isAdmin, wsAuthStore } from '@/lib/ws/staff';
 import type { WsWorkshop } from '@/lib/ws/types';
 import { getWorkshop } from '@/lib/ws/workshops';
@@ -92,7 +93,8 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
                 {orgName ? <Link href={`/orgs/${workshop.organization_id}`} className={styles.link}>{orgName}</Link> : null}
                 <span className={styles.code}>{workshop.code}</span>
                 <StatusPill kind="workshop" value={workshop.status} />
-                <WorkshopPills band={workshop.band} depth={workshop.cycle_depth} device={workshop.device_mode} />
+                <WorkshopPills band={workshop.band} depth={workshop.cycle_depth} device={workshop.device_mode}
+                  poolScope={normalizePoolScope(workshop.pool_scope)} />
                 <WorkshopNumberPill shortCode={workshop.short_code} status={workshop.status} />
               </div>
             </>

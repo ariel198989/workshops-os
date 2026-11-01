@@ -7,17 +7,19 @@ import {
   blockingNote, deviceRuleNotes, groupDevices, prefillFromBand, prefillFromTemplate, type Prefill,
 } from '@/lib/ws/device-rules';
 import { listOrganizations } from '@/lib/ws/orgs';
+import { DEFAULT_POOL_SCOPE, POOL_SCOPE_QUESTION } from '@/lib/ws/pool-scope';
 import { templateGateNote } from '@/lib/ws/template-groups';
 import {
-  DEVICE_MODES, type Band, type CycleDepth, type DeviceMode, type WorkshopFormat, type WsCurriculumTemplate,
-  type WsOrganization,
+  DEVICE_MODES, type Band, type CycleDepth, type DeviceMode, type PoolScope, type WorkshopFormat,
+  type WsCurriculumTemplate, type WsOrganization,
 } from '@/lib/ws/types';
-import { createWorkshop } from '@/lib/ws/workshops';
+import { createWorkshop, updateWorkshop } from '@/lib/ws/workshops';
 import { BandPill, DepthPill, ReleasePill, RuleNotes } from './BandPills';
 import { dbErrorMessage } from './db-errors';
 import { DRAFT_CONFIRM_LABEL, validateWorkshopForm } from './form-utils';
 import { OrgPicker } from './OrgPicker';
 import { BAND_OPTIONS, CYCLE_DEPTH_OPTIONS, DEVICE_LABELS, FORMAT_LABELS, FORMAT_OPTIONS } from './options';
+import { PoolScopeField } from './PoolScopeField';
 import { TeamPrefixField } from './TeamPrefixField';
 import { firstSessionIso, normalizeCode, pickDefaultTemplate, randomCode } from './workshop-utils';
 import styles from './p3.module.css';
@@ -27,6 +29,8 @@ interface FormState {
   format: WorkshopFormat; templateId: string | null; groupSize: string | null;
   startsOn: string; endsOn: string; grade: string; classLabel: string; audience: string;
   band: Band | null; depth: CycleDepth; device: DeviceMode; location: string; notes: string;
+  /** personal (default) or group photo pool; saved after the insert because the column is update-granted only */
+  poolScope: PoolScope;
   /** written-approval checkbox for a draft template; reset whenever the template changes */
   draftConfirmed: boolean;
 }
@@ -34,7 +38,8 @@ interface FormState {
 const INITIAL: FormState = {
   orgId: '', title: '', code: '', prefix: '', format: 'sessions', templateId: null,
   groupSize: null, startsOn: '', endsOn: '', grade: '', classLabel: '', audience: '',
-  band: null, depth: 'L3', device: 'school_tablet_or_lab_pc', location: '', notes: '', draftConfirmed: false,
+  band: null, depth: 'L3', device: 'school_tablet_or_lab_pc', location: '', notes: '',
+  poolScope: DEFAULT_POOL_SCOPE, draftConfirmed: false,
 };
 
 const FALLBACK_GROUP_SIZE = 4;
@@ -158,6 +163,14 @@ export function NewWorkshopForm() {
         band: f.band, cycle_depth: f.depth, device_mode: f.device,
         location: orNull(f.location), notes: orNull(f.notes),
       });
+      // pool_scope is not in the insert grant (0016 grants update only); the DB default is 'personal'
+      if (f.poolScope !== DEFAULT_POOL_SCOPE) {
+        try {
+          await updateWorkshop(w.id, { pool_scope: f.poolScope });
+        } catch (err) {
+          toast(`הסדנה נוצרה, שמירת אופן העבודה על התמונות נכשלה: ${dbErrorMessage(err)}`);
+        }
+      }
       if (template) {
         try {
           await instantiateCurriculum(w.id, template.id, firstSessionIso(f.startsOn) ?? undefined);
@@ -224,6 +237,9 @@ export function NewWorkshopForm() {
           <DeviceSelect band={f.band} value={f.device} onChange={(d) => set('device', d)} />
         </Field>
         {notes.length > 0 ? <div className={styles.spanAll}><RuleNotes notes={notes} /></div> : null}
+        <Field label={POOL_SCOPE_QUESTION} className={styles.spanAll}>
+          <PoolScopeField value={f.poolScope} onChange={(s) => set('poolScope', s)} />
+        </Field>
         <Field label="גודל קבוצה" htmlFor="ws-gsize" error={errors.groupSize ?? ''}>
           <input id="ws-gsize" type="number" min={2} max={8} value={groupSize} onChange={(e) => set('groupSize', e.target.value)} />
         </Field>
