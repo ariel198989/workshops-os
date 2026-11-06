@@ -203,6 +203,16 @@ test('isUnassigned flags active staff without an assignment, never admins or non
   assert.equal(S.isUnassigned(null, 'c'), false);
 });
 
+test('accessNotice trusts the workshop row over the cached whoami', () => {
+  const instr = who('instructor');
+  assert.equal(S.accessNotice('missing', instr, 'c'), 'unassigned');
+  assert.equal(S.accessNotice('loaded', instr, 'c'), 'stale');
+  assert.equal(S.accessNotice('loading', instr, 'c'), 'none');
+  assert.equal(S.accessNotice('missing', who('admin'), 'c'), 'none');
+  assert.equal(S.accessNotice('missing', who('instructor', [{ workshop_id: 'c', role: 'observer' }]), 'c'), 'none');
+  assert.equal(S.accessNotice('loaded', who('instructor', [{ workshop_id: 'c', role: 'lead' }]), 'c'), 'none');
+});
+
 // ── eventLabel ────────────────────────────────────────────────────────
 const evt = (action: string, payload: Record<string, unknown> = {}) =>
   ({ id: 1, workshop_id: 'w', actor: null, action, entity: null, entity_id: null, payload, created_at: '2026-10-18T00:00:00Z' });

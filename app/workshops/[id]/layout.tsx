@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Calendar01Icon } from '@hugeicons/core-free-icons';
@@ -7,7 +7,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { StatusPill } from '@/components/ws/StatusPill';
 import { TabStrip, type TabItem } from '@/components/ws/TabStrip';
-import { UNASSIGNED_TEXT, UnassignedNotice, useUnassigned } from '@/components/ws/UnassignedNotice';
 import { WorkshopPills } from '@/components/ws/p3/BandPills';
 import { WorkshopNumberPill } from '@/components/ws/p3/WorkshopNumberPill';
 import { WorkshopStatusBar } from '@/components/ws/p3/WorkshopStatusBar';
@@ -16,7 +15,7 @@ import { bumpData, dataVersion, toast, useStore } from '@/lib/store';
 import { listGroups } from '@/lib/ws/groups';
 import { getOrganization } from '@/lib/ws/orgs';
 import { normalizePoolScope } from '@/lib/ws/pool-scope';
-import { canEdit, isAdmin, wsAuthStore } from '@/lib/ws/staff';
+import { UNASSIGNED_TEXT, accessNotice, canEdit, isAdmin, whoami as fetchWhoami, wsAuthStore } from '@/lib/ws/staff';
 import type { WsWorkshop } from '@/lib/ws/types';
 import { getWorkshop } from '@/lib/ws/workshops';
 
@@ -53,8 +52,15 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
   const [version, setVersion] = useState(0);
   // settings saves and group creation call bumpData(); the header refetches without flashing a spinner
   const { n: dataN } = useStore(dataVersion);
-  // unassigned staff get empty rows from RLS; say why instead of showing empty tabs
-  const unassigned = useUnassigned(id);
+  // RLS hides the workshop from unassigned staff; the row decides, the cached whoami only explains why
+  const notice = accessNotice(workshop === undefined ? 'loading' : workshop ? 'loaded' : 'missing', whoami, id);
+  const refetchedFor = useRef<string | null>(null);
+  useEffect(() => {
+    // assigned after login: the row loads but whoami still lacks the workshop; refresh it once per workshop
+    if (notice !== 'stale' || refetchedFor.current === id) return;
+    refetchedFor.current = id;
+    fetchWhoami().then((w) => wsAuthStore.set({ whoami: w, loaded: true })).catch(() => undefined);
+  }, [notice, id]);
 
   useEffect(() => {
     let live = true;
@@ -72,8 +78,8 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
 
   if (workshop === null) {
     return (
-      <EmptyState icon={Calendar01Icon} title={unassigned ? 'אין גישה לסדנה' : 'הסדנה לא נמצאה'}
-        text={unassigned ? UNASSIGNED_TEXT : 'ייתכן שהיא נמחקה או שאין לכם גישה אליה.'}
+      <EmptyState icon={Calendar01Icon} title={notice === 'unassigned' ? 'אין גישה לסדנה' : 'הסדנה לא נמצאה'}
+        text={notice === 'unassigned' ? UNASSIGNED_TEXT : 'ייתכן שהיא נמחקה או שאין לכם גישה אליה.'}
         actions={<button type="button" className="primary" onClick={() => router.push('/workshops')}>חזרה לסדנאות</button>} />
     );
   }
@@ -109,7 +115,7 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
         ) : null}
       </header>
       <TabStrip base={`/workshops/${id}`} tabs={TABS} active={activeTab(pathname, id)} />
-      {unassigned ? <UnassignedNotice /> : <Fragment key={version}>{children}</Fragment>}
+      <Fragment key={version}>{children}</Fragment>
     </>
   );
 }

@@ -33,6 +33,19 @@ export function canView(w: Whoami | null, workshopId: string): boolean {
 /** Staff who are not assigned to this workshop: RLS hides its sessions, groups, photos, models and jobs. */
 export const isUnassigned = (w: Whoami | null, workshopId: string): boolean => !!w?.staff && !canView(w, workshopId);
 
+export const UNASSIGNED_TEXT = 'אינך משובץ/ת לסדנה הזו, ולכן הנתונים שלה מוסתרים. מנהל יכול לשבץ אותך בהגדרות הסדנה.';
+
+/**
+ * whoami is cached at login, so the workshop row decides: a loaded workshop never shows the notice
+ * ('stale' = whoami disagrees and should be refetched); a missing one shows it only when whoami agrees.
+ */
+export function accessNotice(
+  workshop: 'loading' | 'loaded' | 'missing', w: Whoami | null, workshopId: string,
+): 'none' | 'unassigned' | 'stale' {
+  if (workshop === 'loading' || !isUnassigned(w, workshopId)) return 'none';
+  return workshop === 'loaded' ? 'stale' : 'unassigned';
+}
+
 export async function listStaff(): Promise<WsStaff[]> {
   const { data, error } = await sb.from('ws_staff').select('*').order('full_name');
   if (error) throw error;
