@@ -18,7 +18,7 @@ const admin = createClient(SB_URL, SERVICE, { auth: { persistSession: false } })
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
+  'Access-Control-Allow-Headers': 'authorization, content-type, x-train-secret',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const json = (body: unknown, status = 200) =>
@@ -62,6 +62,11 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: 'POST only' }, 405);
   if (!SECRET || SECRET.length < 16) return json({ error: 'trainer secret not configured' }, 503);
+  // reject oversized bodies and wrong header secrets before the multipart body is read into memory
+  const declared = Number(req.headers.get('content-length') || 0);
+  if (declared > MAX_BYTES + 1024 * 1024) return json({ error: 'zip too large' }, 413);
+  const headerSecret = req.headers.get('x-train-secret');
+  if (headerSecret !== null && !timingSafeEqual(headerSecret, SECRET)) return json({ error: 'bad secret' }, 401);
   try {
     const form = await req.formData();
     if (!timingSafeEqual(String(form.get('secret') || ''), SECRET)) return json({ error: 'bad secret' }, 401);
@@ -115,9 +120,15 @@ Deno.serve(async (req) => {
       return json({ error: 'insert: ' + insErr.message }, 500);
     }
 
-    await admin.from('ws_training_jobs')
+    const { data: closed, error: updErr } = await admin.from('ws_training_jobs')
       .update({ status: 'done', result_model_id: model.id, completed_at: new Date().toISOString(), pool_zip_path: null })
-      .eq('id', jobId).in('status', ['pending', 'running']);
+      .eq('id', jobId).in('status', ['pending', 'running']).select('id');
+    if (updErr || !closed || !closed.length) {
+      // the job was cancelled or failed while the trainer uploaded: keep no orphan model
+      await admin.from('ws_models').delete().eq('id', model.id);
+      await admin.storage.from(MODELS).remove([path]).catch(() => null);
+      return json({ error: updErr ? 'job update: ' + updErr.message : 'job is no longer active' }, 409);
+    }
     if (job.pool_zip_path) await admin.storage.from(MEDIA).remove([job.pool_zip_path]).catch(() => null);
 
     // GC: dataset ZIPs of finished jobs older than a day
