@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { StatusPill } from '@/components/ws/StatusPill';
 import { TabStrip, type TabItem } from '@/components/ws/TabStrip';
+import { UNASSIGNED_TEXT, UnassignedNotice, useUnassigned } from '@/components/ws/UnassignedNotice';
 import { WorkshopPills } from '@/components/ws/p3/BandPills';
 import { WorkshopNumberPill } from '@/components/ws/p3/WorkshopNumberPill';
 import { WorkshopStatusBar } from '@/components/ws/p3/WorkshopStatusBar';
@@ -52,6 +53,8 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
   const [version, setVersion] = useState(0);
   // settings saves and group creation call bumpData(); the header refetches without flashing a spinner
   const { n: dataN } = useStore(dataVersion);
+  // unassigned staff get empty rows from RLS; say why instead of showing empty tabs
+  const unassigned = useUnassigned(id);
 
   useEffect(() => {
     let live = true;
@@ -69,7 +72,8 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
 
   if (workshop === null) {
     return (
-      <EmptyState icon={Calendar01Icon} title="הסדנה לא נמצאה" text="ייתכן שהיא נמחקה או שאין לכם גישה אליה."
+      <EmptyState icon={Calendar01Icon} title={unassigned ? 'אין גישה לסדנה' : 'הסדנה לא נמצאה'}
+        text={unassigned ? UNASSIGNED_TEXT : 'ייתכן שהיא נמחקה או שאין לכם גישה אליה.'}
         actions={<button type="button" className="primary" onClick={() => router.push('/workshops')}>חזרה לסדנאות</button>} />
     );
   }
@@ -105,7 +109,7 @@ export default function WorkshopLayout({ children }: { children: ReactNode }) {
         ) : null}
       </header>
       <TabStrip base={`/workshops/${id}`} tabs={TABS} active={activeTab(pathname, id)} />
-      <Fragment key={version}>{children}</Fragment>
+      {unassigned ? <UnassignedNotice /> : <Fragment key={version}>{children}</Fragment>}
     </>
   );
 }

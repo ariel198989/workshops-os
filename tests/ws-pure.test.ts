@@ -194,6 +194,15 @@ test('canEdit allows admins and lead/instructor/assistant; canView adds observer
   assert.equal(S.canEdit(who(null, [{ workshop_id: 'a', role: 'lead' }]), 'a'), false);
 });
 
+test('isUnassigned flags active staff without an assignment, never admins or non-staff', () => {
+  const w = who('instructor', [{ workshop_id: 'b', role: 'observer' }]);
+  assert.equal(S.isUnassigned(w, 'c'), true);
+  assert.equal(S.isUnassigned(w, 'b'), false);
+  assert.equal(S.isUnassigned(who('admin'), 'c'), false);
+  assert.equal(S.isUnassigned(who(null), 'c'), false);
+  assert.equal(S.isUnassigned(null, 'c'), false);
+});
+
 // ── eventLabel ────────────────────────────────────────────────────────
 const evt = (action: string, payload: Record<string, unknown> = {}) =>
   ({ id: 1, workshop_id: 'w', actor: null, action, entity: null, entity_id: null, payload, created_at: '2026-10-18T00:00:00Z' });

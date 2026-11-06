@@ -30,6 +30,9 @@ export function canView(w: Whoami | null, workshopId: string): boolean {
   return isAdmin(w) || w.workshops.some((x) => x.workshop_id === workshopId);
 }
 
+/** Staff who are not assigned to this workshop: RLS hides its sessions, groups, photos, models and jobs. */
+export const isUnassigned = (w: Whoami | null, workshopId: string): boolean => !!w?.staff && !canView(w, workshopId);
+
 export async function listStaff(): Promise<WsStaff[]> {
   const { data, error } = await sb.from('ws_staff').select('*').order('full_name');
   if (error) throw error;
