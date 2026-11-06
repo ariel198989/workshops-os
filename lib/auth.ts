@@ -5,21 +5,19 @@ import { createStore } from './store';
 
 export interface AuthState {
   user: { id: string; email?: string } | null;
-  team: string;
   admin: boolean;
   viewer: boolean;
   loaded: boolean;
 }
 
-export const authStore = createStore<AuthState>({ user: null, team: '', admin: false, viewer: false, loaded: false });
+export const authStore = createStore<AuthState>({ user: null, admin: false, viewer: false, loaded: false });
 
 export async function initAuth() {
   try {
     const { data: { session } } = await sb.auth.getSession();
     const user = session?.user || null;
-    const team = (user?.user_metadata?.class_name as string) || user?.email?.split('@')[0] || '';
     const admin = !!(user && ADMINS.includes((user.email || '').toLowerCase()));
-    authStore.set({ user, team, admin, loaded: true });
+    authStore.set({ user, admin, loaded: true });
   } catch {
     authStore.set({ loaded: true });
   }
