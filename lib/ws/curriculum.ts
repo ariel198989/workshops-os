@@ -39,11 +39,14 @@ export async function listTemplates(): Promise<WsCurriculumTemplate[]> {
   return data as WsCurriculumTemplate[];
 }
 
-/** The template's story frame and openers (null when the template has none). */
-export async function getTemplateStory(templateId: string): Promise<TemplateStory | null> {
-  const { data, error } = await sb.from('ws_curriculum_templates').select('story').eq('id', templateId).maybeSingle();
+/**
+ * The workshop template's story frame and openers via ws_workshop_story (0024): any workshop staff member
+ * may read it, while ws_curriculum_templates itself is core-staff only. Null without a template or story.
+ */
+export async function getWorkshopStory(workshopId: string): Promise<TemplateStory | null> {
+  const { data, error } = await sb.rpc('ws_workshop_story', { p_workshop: workshopId });
   if (error) throw error;
-  return normalizeStory((data as { story?: unknown } | null)?.story);
+  return normalizeStory(data);
 }
 
 export async function getTemplate(id: string): Promise<TemplateWithModules> {

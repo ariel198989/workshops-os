@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getTemplateStory } from '@/lib/ws/curriculum';
+import { getWorkshopStory } from '@/lib/ws/curriculum';
 import { openerFor, type TemplateStory } from '@/lib/ws/story';
-import { getWorkshop, listSessions } from '@/lib/ws/workshops';
+import { listSessions } from '@/lib/ws/workshops';
 import type { WsSessionModule } from '@/lib/ws/types';
 import { InstantiateEmpty } from '@/components/ws/p4/InstantiateEmpty';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
@@ -18,14 +18,8 @@ function hashSessionNo(): number | null {
 }
 
 /** The template's openers are a nice-to-have: a failing read shows the sessions without them. */
-async function loadStory(workshopId: string): Promise<TemplateStory | null> {
-  try {
-    const w = await getWorkshop(workshopId);
-    return w.template_id ? await getTemplateStory(w.template_id) : null;
-  } catch {
-    return null;
-  }
-}
+const loadStory = (workshopId: string): Promise<TemplateStory | null> =>
+  getWorkshopStory(workshopId).catch(() => null);
 
 export default function SessionsPage() {
   const id = useWorkshopId();
