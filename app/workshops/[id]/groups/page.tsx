@@ -140,7 +140,7 @@ export default function GroupsPage() {
           </div>
 
           {groups.length > 0 ? <LiveStepBar workshopId={id} sessions={overview.sessions} canEdit={canEdit} handle={liveHandle} /> : null}
-          {groups.length > 0 ? <TrainingPanel groups={groups} canEdit={canEdit} refreshKey={overview.generated_at} poolScope={poolScope} /> : null}
+          {groups.length > 0 ? <TrainingPanel groups={groups} canEdit={canEdit} refreshKey={overview.generated_at} poolScope={poolScope} members={board.people} /> : null}
 
           {groups.length === 0 ? (
             <EmptyState icon={UserGroupIcon} title="עדיין אין קבוצות"

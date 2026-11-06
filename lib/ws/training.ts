@@ -2,7 +2,7 @@ import { sb } from '../db';
 import type { TrainingJobStatus, WsTrainingJob } from './types';
 
 // ws_training_jobs (migration 0017): the console only reads the open jobs of its own groups and can fail one.
-export type TrainingJob = Pick<WsTrainingJob, 'id' | 'group_id' | 'team_name' | 'status' | 'image_count' | 'created_at' | 'started_at'>;
+export type TrainingJob = Pick<WsTrainingJob, 'id' | 'group_id' | 'team_name' | 'status' | 'image_count' | 'created_at' | 'started_at' | 'requested_by'>;
 
 export const OPEN_JOB_STATUSES: readonly TrainingJobStatus[] = ['pending', 'running'];
 
@@ -10,7 +10,7 @@ export const OPEN_JOB_STATUSES: readonly TrainingJobStatus[] = ['pending', 'runn
 export async function listOpenTrainingJobs(groupIds: readonly string[]): Promise<TrainingJob[]> {
   if (groupIds.length === 0) return [];
   const { data, error } = await sb.from('ws_training_jobs')
-    .select('id, group_id, team_name, status, image_count, created_at, started_at')
+    .select('id, group_id, team_name, status, image_count, created_at, started_at, requested_by')
     .in('group_id', groupIds).in('status', OPEN_JOB_STATUSES)
     .order('created_at', { ascending: false });
   if (error) throw error;

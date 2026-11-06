@@ -1,5 +1,6 @@
 'use client';
 import { useState, type DragEvent, type ReactNode } from 'react';
+import { ModelScopePill } from '@/components/ws/ModelScopePill';
 import { Pill, StatusPill } from '@/components/ws/StatusPill';
 import { toast } from '@/lib/store';
 import type { ParticipantWithGroup } from '@/lib/ws/participants';
@@ -92,6 +93,7 @@ export function StatusLines({ group }: { group: OverviewGroup }) {
         {model ? (
           <>
             <span>{model.name}{acc ? `, ${acc}` : ''}</span>
+            <ModelScopePill scope={model.scope} />
             {model.approved ? <Pill label="מאושר" tone="teal" /> : null}
           </>
         ) : <span className={styles.muted}>אין מודל עדיין</span>}

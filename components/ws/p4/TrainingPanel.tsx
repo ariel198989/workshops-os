@@ -1,8 +1,10 @@
 'use client';
 import { useState } from 'react';
+import { ModelScopePill } from '@/components/ws/ModelScopePill';
 import { Pill } from '@/components/ws/StatusPill';
 import { COLAB } from '@/lib/config';
 import { toast } from '@/lib/store';
+import { jobScope, type ScopeMember } from '@/lib/ws/model-scope';
 import { DEFAULT_POOL_SCOPE, trainingPanelTitle } from '@/lib/ws/pool-scope';
 import { failTrainingJob, listOpenTrainingJobs, type TrainingJob } from '@/lib/ws/training';
 import type { OverviewGroup, PoolScope } from '@/lib/ws/types';
@@ -21,6 +23,8 @@ interface TrainingPanelProps {
   refreshKey: string;
   /** workshop pool scope (0016): a personal pool titles the panel "אימונים אישיים"; the job list is the same */
   poolScope?: PoolScope;
+  /** board participants: a job requested by an active member of its group trains a personal model */
+  members: readonly ScopeMember[];
 }
 
 const TONE: Record<TrainingJob['status'], 'amber' | 'blue' | 'green' | 'red' | 'gray'> = {
@@ -28,7 +32,7 @@ const TONE: Record<TrainingJob['status'], 'amber' | 'blue' | 'green' | 'red' | '
 };
 
 /** Live-session view of the trainer: open jobs of this workshop's groups, Colab link, fail action. */
-export function TrainingPanel({ groups, canEdit, refreshKey, poolScope = DEFAULT_POOL_SCOPE }: TrainingPanelProps) {
+export function TrainingPanel({ groups, canEdit, refreshKey, poolScope = DEFAULT_POOL_SCOPE, members }: TrainingPanelProps) {
   const ids = jobGroupIds(groups);
   const { data: jobs, error, loading, reload } = useLoader(() => listOpenTrainingJobs(ids), `${ids.join('|')}#${refreshKey}`);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -73,6 +77,7 @@ export function TrainingPanel({ groups, canEdit, refreshKey, poolScope = DEFAULT
                   <span className={styles.teamChip} title={j.team_name}>{j.team_name}</span>
                 </span>
                 <Pill label={JOB_STATUS_LABELS[j.status]} tone={TONE[j.status]} />
+                <ModelScopePill scope={jobScope(j, poolScope, members)} />
                 <span className={styles.jobMeta}>
                   {`${j.image_count} תמונות · `}
                   {j.status === 'running' && j.started_at ? `התחיל ${formatDateTime(j.started_at)}` : `נוצר ${formatDateTime(j.created_at)}`}

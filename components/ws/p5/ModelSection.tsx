@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Drawer } from '../Drawer';
+import { ModelScopePill } from '../ModelScopePill';
 import { Spinner } from '@/components/ui/Spinner';
 import { fetchGroupModels } from '@/lib/ws/deliverables';
 import { toast } from '@/lib/store';
@@ -41,6 +42,7 @@ export function ModelSection({ row, disabled, onChanged }: ModelSectionProps) {
       {current ? (
         <p dir="auto">
           <span className="ink">{current.name}</span>{' '}
+          <ModelScopePill scope={current.scope} />{' '}
           <span className="hint">
             דיוק {formatAccuracy(current.accuracy)}{current.approved ? ', מאושר' : ''}
           </span>

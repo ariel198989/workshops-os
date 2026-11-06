@@ -52,6 +52,7 @@ export type Band = (typeof BANDS)[number];
 export type DeviceMode = (typeof DEVICE_MODES)[number];
 export type ReleaseStatus = (typeof RELEASE_STATUSES)[number];
 export type PoolScope = (typeof POOL_SCOPES)[number];
+export type ModelScope = 'personal' | 'group';
 
 export type OrgKind = 'school' | 'company' | 'municipality' | 'ngo' | 'other';
 export type ModuleType = 'theory' | 'practice' | 'demo' | 'mixed';
@@ -197,7 +198,7 @@ export interface WsModel {
   id: string; workshop_id: string; group_id: string; team_name: string; owner: string | null; name: string;
   classes: string[]; zip_path: string; approved: boolean;
   /** mAP50 in 0..1 from training */
-  accuracy: number | null; image_count: number | null; honest_val: boolean | null; scope: string;
+  accuracy: number | null; image_count: number | null; honest_val: boolean | null; scope: ModelScope;
   class_stats: unknown; created_at: string;
 }
 
@@ -229,7 +230,7 @@ export interface OverviewGroup {
   today: number; contributors: number; last_photo_at: string | null;
   coverage: ClassCoverage[]; off_target_classes: ClassCoverage[]; readiness: Readiness;
   jobs: { pending: number; running: number; done: number; last: JsonObject | null };
-  model: { id: string; name: string; accuracy: number | null; approved: boolean; scope: string;
+  model: { id: string; name: string; accuracy: number | null; approved: boolean; scope: ModelScope;
     image_count: number | null; honest_val: boolean | null; class_stats: unknown; created_at: string } | null;
   models_count: number; attendance_rate: number | null;
   deliverable: { status: DeliverableStatus; final_model_id: string | null; presentation_url: string | null;
