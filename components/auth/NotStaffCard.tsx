@@ -1,6 +1,7 @@
 'use client';
 import { logout } from '@/lib/auth';
 import { STUDENT_URL } from '@/lib/student-app';
+import { AccessibilityLink } from '@/components/ui/AccessibilityLink';
 import styles from './auth.module.css';
 
 /** Signed in but not a staff member (a student or an unknown account): send them to the student app. */
@@ -15,6 +16,7 @@ export function NotStaffCard() {
           <button type="button" onClick={() => void logout()}>התנתקות</button>
         </div>
       </div>
+      <AccessibilityLink />
     </main>
   );
 }

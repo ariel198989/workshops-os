@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from 'react';
 import { login } from '@/lib/auth';
 import { STUDENT_URL } from '@/lib/student-app';
+import { AccessibilityLink } from '@/components/ui/AccessibilityLink';
 import styles from './auth.module.css';
 
 /** Signed-out screen: staff sign in only. Students are pointed at the student app. */
@@ -50,6 +51,7 @@ export function LoginCard() {
           תלמיד/ה? <a href={STUDENT_URL}>ההרשמה באפליקציית התלמידים</a>
         </p>
       </div>
+      <AccessibilityLink />
     </main>
   );
 }

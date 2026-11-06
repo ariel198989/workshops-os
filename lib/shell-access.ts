@@ -14,10 +14,12 @@ export function roleLabel(role: StaffRole | null | undefined): string {
   return role ? ROLE_LABELS[role] : '';
 }
 
-/** Paths rendered without AuthGate and Shell. */
+const PUBLIC_ROOTS = ['/verify', '/accessibility'] as const;
+
+/** Paths rendered without AuthGate and Shell: certificate verification and the accessibility statement. */
 export function isPublicPath(pathname: string | null): boolean {
   if (!pathname) return false;
-  return pathname === '/verify' || pathname.startsWith('/verify/');
+  return PUBLIC_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`));
 }
 
 /**

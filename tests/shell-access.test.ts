@@ -72,6 +72,12 @@ test('verify paths are public', () => {
   assert.equal(isPublicPath(null), false);
 });
 
+test('the accessibility statement is public', () => {
+  assert.equal(isPublicPath('/accessibility'), true);
+  assert.equal(isPublicPath('/accessibility/'), true);
+  assert.equal(isPublicPath('/accessibilityx'), false);
+});
+
 test('canonical staff helpers agree with the shell gate', async () => {
   const { isAdmin, isCoreStaff } = await import('../lib/ws/staff.ts');
   assert.equal(isAdmin(staff('admin')), true);

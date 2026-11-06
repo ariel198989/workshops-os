@@ -9,6 +9,7 @@ import { visibleNavItems, isActive } from '@/lib/nav';
 import { roleLabel } from '@/lib/shell-access';
 import { useStore } from '@/lib/store';
 import { wsAuthStore } from '@/lib/ws/staff';
+import { AccessibilityLink } from './ui/AccessibilityLink';
 import { MobileNav } from './shell/MobileNav';
 import { NAV_ICONS } from './shell/nav-icons';
 
@@ -56,7 +57,10 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <Sidebar />
-      <main className="content">{children}</main>
+      <main className="content">
+        {children}
+        <AccessibilityLink />
+      </main>
       <MobileNav />
     </div>
   );
