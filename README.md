@@ -36,6 +36,10 @@ Environment variables:
 - `NEXT_PUBLIC_STUDENT_URL` (set here): address of the student app. Defaults to `https://workshops-student.vercel.app`.
 - `NEXT_PUBLIC_CONSOLE_URL` (set in the student repo): address of this console, used for links back (for example certificate verification).
 
+## DB
+
+- `ws_participants` SELECT is granted per column (0019b). A new column needs `grant select (col) on public.ws_participants to authenticated`, or every participants read fails with 42501. `notes` and `custom_fields` stay staff-only via `ws_participant_private`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
