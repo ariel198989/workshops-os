@@ -9,7 +9,7 @@ import { toast } from '@/lib/store';
 import { listGroups } from '@/lib/ws/groups';
 import { getWorkshop } from '@/lib/ws/workshops';
 import {
-  listParticipants, moveParticipant, updateParticipant, type ParticipantWithGroup,
+  listParticipantsWithPrivate, moveParticipant, updateParticipant, type ParticipantRow,
 } from '@/lib/ws/participants';
 import type { ParticipantPatch, WorkshopStatus, WsGroup } from '@/lib/ws/types';
 import { LinkPicker } from '@/components/ws/p4/LinkPicker';
@@ -19,7 +19,7 @@ import { linkCandidates } from '@/components/ws/p4/link-utils';
 import { errorText, useCanEdit, useLoader, useWorkshopId } from '@/components/ws/p4/hooks';
 import styles from '@/components/ws/p4/people.module.css';
 
-interface Data { rows: ParticipantWithGroup[]; groups: WsGroup[]; code: string; shortCode: string | null; status: WorkshopStatus }
+interface Data { rows: ParticipantRow[]; groups: WsGroup[]; code: string; shortCode: string | null; status: WorkshopStatus }
 
 const SOURCE_LABELS = { roster: 'רשימה', signup: 'הרשמה באפליקציית התלמידים', manual: 'ידני' } as const;
 const CONSENT_OPTIONS: readonly InlineOption[] = [
@@ -34,12 +34,12 @@ export default function ParticipantsPage() {
   const canEdit = useCanEdit(id);
   const { data, error, loading, reload, setData } = useLoader<Data>(
     async () => {
-      const [rows, groups, workshop] = await Promise.all([listParticipants(id), listGroups(id), getWorkshop(id)]);
+      const [rows, groups, workshop] = await Promise.all([listParticipantsWithPrivate(id), listGroups(id), getWorkshop(id)]);
       return { rows, groups, code: workshop.code, shortCode: workshop.short_code, status: workshop.status };
     }, id);
   const [query, setQuery] = useState('');
   const [showWithdrawn, setShowWithdrawn] = useState(false);
-  const [linkBase, setLinkBase] = useState<ParticipantWithGroup | null>(null);
+  const [linkBase, setLinkBase] = useState<ParticipantRow | null>(null);
 
   const rows = data?.rows ?? [];
   const groups = data?.groups ?? [];
@@ -50,7 +50,7 @@ export default function ParticipantsPage() {
     return rows.filter((r) => (showWithdrawn || r.status !== 'withdrawn') && (!q || r.full_name.toLowerCase().includes(q)));
   }, [rows, query, showWithdrawn]);
 
-  const patchLocal = (pid: string, change: Partial<ParticipantWithGroup>) =>
+  const patchLocal = (pid: string, change: Partial<ParticipantRow>) =>
     setData((cur) => cur && { ...cur, rows: cur.rows.map((r) => (r.id === pid ? { ...r, ...change } : r)) });
 
   const save = async (pid: string, patch: ParticipantPatch) => {
@@ -72,7 +72,7 @@ export default function ParticipantsPage() {
     patchLocal(pid, { group_id: groupId, group: g ? { number: g.number, display_name: g.display_name } : null });
   };
 
-  const columns: Column<ParticipantWithGroup>[] = [
+  const columns: Column<ParticipantRow>[] = [
     { key: 'name', header: 'שם', sortValue: (r) => r.full_name,
       render: (r) => <InlineEdit value={r.full_name} disabled={!canEdit} ariaLabel="שם" onSave={(v) => text(v) ? save(r.id, { full_name: text(v) ?? r.full_name }) : undefined} /> },
     { key: 'grade', header: 'כיתה', width: '90px',

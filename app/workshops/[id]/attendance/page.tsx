@@ -7,9 +7,9 @@ import {
   attendanceMap, listAttendance, markAllPresent, markAttendance, setAttendanceTaken,
 } from '@/lib/ws/attendance';
 import { labelOf } from '@/lib/ws/labels';
-import { listParticipants } from '@/lib/ws/participants';
+import { listParticipants, type ParticipantWithGroup } from '@/lib/ws/participants';
 import { listSessions } from '@/lib/ws/workshops';
-import { ATTENDANCE_STATUSES, type WsParticipant, type WsSession } from '@/lib/ws/types';
+import { ATTENDANCE_STATUSES, type WsSession } from '@/lib/ws/types';
 import { AttendanceGrid } from '@/components/ws/p4/AttendanceGrid';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
 import { markKey, nextAttendanceStatus, type MarkMap } from '@/components/ws/p4/attendance-utils';
@@ -17,7 +17,7 @@ import { errorText, useCanEdit, useLoader, useWorkshopId } from '@/components/ws
 import flow from '@/components/ws/p4/flow.module.css';
 import styles from '@/components/ws/p4/people.module.css';
 
-interface Data { sessions: WsSession[]; people: WsParticipant[]; marks: MarkMap }
+interface Data { sessions: WsSession[]; people: ParticipantWithGroup[]; marks: MarkMap }
 
 async function loadAll(id: string): Promise<Data> {
   const [sessions, people, marks] = await Promise.all([listSessions(id), listParticipants(id), listAttendance(id)]);
