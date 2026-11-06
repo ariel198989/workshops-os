@@ -39,6 +39,9 @@ delete from public.sc_detections d using public.ws_photos p
 delete from public.sc_classes c using public.ws_groups g
  where g.sc_class_id = c.id and c.name = g.team_name;
 
--- 4. the link columns go
+-- 4. the link columns go (a group may be deleted only before activation: same rule, new flag)
+drop policy if exists ws_grp_del on public.ws_groups;
+create policy ws_grp_del on public.ws_groups for delete to authenticated
+  using (public.ws_can_edit_workshop(workshop_id) and activated_at is null);
 alter table public.ws_groups drop column if exists sc_class_id;
 alter table public.ws_workshops drop column if exists sc_campaign_id;
