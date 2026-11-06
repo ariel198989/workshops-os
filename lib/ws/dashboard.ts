@@ -1,9 +1,8 @@
 // Data + pure helpers for the dashboard (/) and the read-only models mirror (/models).
 // New file: existing lib/ws/* modules are reused, not edited.
 import { sb } from '../db';
-import { teamNames } from './groups';
 import type { WorkshopWithOrg } from './workshops';
-import type { WsEvent, WsGroup, WsSession } from './types';
+import type { WsEvent, WsGroup, WsModel, WsSession } from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_DAYS = 7;
@@ -30,24 +29,16 @@ export const isNewInstall = (c: { orgs: number; workshops: number }): boolean =>
 
 export const accuracyPercent = (v: number | null): string => (v === null ? '' : `${Math.round(v * 100)}%`);
 
-export interface ModelRow {
-  id: string; team_name: string; name: string; accuracy: number | null; image_count: number | null;
-  approved: boolean; created_at: string;
-}
+export type ModelRow = Pick<WsModel, 'id' | 'group_id' | 'name' | 'accuracy' | 'image_count' | 'approved' | 'created_at'>;
 export type GroupRef = Pick<WsGroup, 'id' | 'number' | 'display_name' | 'team_name' | 'workshop_id'>;
-export interface MatchedModel<G extends GroupRef = GroupRef> { model: ModelRow; group: G; personal: boolean }
+export interface MatchedModel<G extends GroupRef = GroupRef> { model: ModelRow; group: G }
 
-/** A model belongs to a workshop group when its team_name is the group's team or the personal variant. */
+/** Pairs each model with its group by group_id; a model whose group is not in the list is dropped. */
 export function matchModels<G extends GroupRef>(models: readonly ModelRow[], groups: readonly G[]): MatchedModel<G>[] {
-  const byKey = new Map<string, { group: G; personal: boolean }>();
-  for (const g of groups) {
-    const [team, personal] = teamNames(g.team_name);
-    byKey.set(team, { group: g, personal: false });
-    byKey.set(personal, { group: g, personal: true });
-  }
+  const byId = new Map(groups.map((g) => [g.id, g] as const));
   return models.flatMap((model) => {
-    const hit = byKey.get(model.team_name);
-    return hit ? [{ model, group: hit.group, personal: hit.personal }] : [];
+    const group = byId.get(model.group_id);
+    return group ? [{ model, group }] : [];
   });
 }
 
@@ -87,18 +78,13 @@ export async function listGroupRefs(): Promise<GroupWithWorkshop[]> {
   return data as unknown as GroupWithWorkshop[];
 }
 
-const TEAM_CHUNK = 40;
+const MODELS_LIMIT = 1000;
 
-/** sc_models is publicly readable; queried by team key in chunks so the URL stays short for big rosters. */
-export async function listModelsForTeams(teams: readonly string[]): Promise<ModelRow[]> {
-  const chunks = Array.from({ length: Math.ceil(teams.length / TEAM_CHUNK) }, (_, i) =>
-    teams.slice(i * TEAM_CHUNK, (i + 1) * TEAM_CHUNK));
-  const pages = await Promise.all(chunks.map(async (keys) => {
-    const { data, error } = await sb.from('sc_models')
-      .select('id, team_name, name, accuracy, image_count, approved, created_at')
-      .in('team_name', [...keys]).order('created_at', { ascending: false }).limit(500);
-    if (error) throw error;
-    return data as ModelRow[];
-  }));
-  return pages.flat().sort((a, b) => b.created_at.localeCompare(a.created_at));
+/** ws_models, newest first. RLS returns only the models of workshops the signed-in staff member can see. */
+export async function listModels(): Promise<ModelRow[]> {
+  const { data, error } = await sb.from('ws_models')
+    .select('id, group_id, name, accuracy, image_count, approved, created_at')
+    .order('created_at', { ascending: false }).limit(MODELS_LIMIT);
+  if (error) throw error;
+  return data as ModelRow[];
 }

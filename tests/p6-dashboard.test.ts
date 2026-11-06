@@ -55,16 +55,18 @@ test('matchModels keeps only models of existing groups and resolves the group', 
     { id: 'g2', number: 2, display_name: 'נשרים', team_name: 'ח1 · קבוצה 2', workshop_id: 'w1' },
   ];
   const models = [
-    { id: 'm1', team_name: 'ח1 · קבוצה 1', name: 'a', accuracy: 0.9, image_count: 10, approved: true, created_at: '2026-10-01' },
-    { id: 'm2', team_name: 'אישי · ח1 · קבוצה 2', name: 'b', accuracy: null, image_count: null, approved: false, created_at: '2026-10-02' },
-    { id: 'm3', team_name: 'עיר אחרת', name: 'c', accuracy: 0.5, image_count: 1, approved: false, created_at: '2026-10-03' },
+    { id: 'm1', group_id: 'g1', name: 'a', accuracy: 0.9, image_count: 10, approved: true, created_at: '2026-10-01' },
+    { id: 'm2', group_id: 'g2', name: 'b', accuracy: null, image_count: null, approved: false, created_at: '2026-10-02' },
+    { id: 'm3', group_id: 'g-of-another-workshop', name: 'c', accuracy: 0.5, image_count: 1, approved: false, created_at: '2026-10-03' },
+    { id: 'm4', group_id: 'g1', name: 'd', accuracy: 0.7, image_count: 5, approved: true, created_at: '2026-10-04' },
   ];
   const rows = D.matchModels(models, groups);
-  assert.deepEqual(rows.map((r) => [r.model.id, r.group.id, r.personal]), [['m1', 'g1', false], ['m2', 'g2', true]]);
+  assert.deepEqual(rows.map((r) => [r.model.id, r.group.id]), [['m1', 'g1'], ['m2', 'g2'], ['m4', 'g1']]);
+  assert.equal(rows[1].group.display_name, 'נשרים');
 });
 
 test('matchModels returns nothing when there are no groups', () => {
-  assert.deepEqual(D.matchModels([{ id: 'm', team_name: 'x', name: 'n', accuracy: 1, image_count: 1, approved: true, created_at: '' }], []), []);
+  assert.deepEqual(D.matchModels([{ id: 'm', group_id: 'x', name: 'n', accuracy: 1, image_count: 1, approved: true, created_at: '' }], []), []);
 });
 
 test('accuracyPercent formats 0..1 as a whole percent and handles null', () => {

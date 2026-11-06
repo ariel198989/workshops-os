@@ -132,7 +132,7 @@ export function WorkshopFields({ workshop: w, canEdit, identityLocked, onSaved }
       </div>
       <RuleNotes notes={notes} />
       {identityLocked ? (
-        <p className={styles.lockNote}>הקוד והקידומת ננעלים אחרי הפעלת הקבוצות, כי הם מזהים את הנתונים באפליקציית Smart City.</p>
+        <p className={styles.lockNote}>הקוד והקידומת ננעלים אחרי הפעלת הקבוצות, כי הם מזהים את התמונות והמודלים של הקבוצות.</p>
       ) : null}
     </section>
   );

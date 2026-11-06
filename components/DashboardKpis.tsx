@@ -7,7 +7,7 @@ import { fetchQuickCounts, type QuickCounts } from '@/lib/dashboard';
 import { KpiTile } from '@/components/ui/KpiTile';
 
 type Loadable = { [K in keyof QuickCounts]: number | null | undefined };
-const LOADING: Loadable = { classes: null, models: null, pendingJobs: null, detectionsToday: null };
+const LOADING: Loadable = { activatedGroups: null, models: null, pendingJobs: null, photosToday: null };
 
 export function DashboardKpis() {
   const [counts, setCounts] = useState<Loadable>(LOADING);
@@ -20,10 +20,10 @@ export function DashboardKpis() {
 
   return (
     <div className="kpi-grid">
-      <KpiTile label="קבוצות וכיתות" value={counts.classes} icon={UserGroupIcon} note="רשומות במערכת" />
+      <KpiTile label="קבוצות" value={counts.activatedGroups} icon={UserGroupIcon} note="קבוצות שהופעלו" />
       <KpiTile label="מודלים" value={counts.models} icon={Brain02Icon} note="מודלים שאומנו" />
       <KpiTile label="אימונים בהמתנה" value={counts.pendingJobs} icon={Task01Icon} tone="gold" note="ממתינים בתור" />
-      <KpiTile label="זיהויים היום" value={counts.detectionsToday} icon={Image02Icon} note="מאז חצות" />
+      <KpiTile label="תמונות היום" value={counts.photosToday} icon={Image02Icon} note="מאז חצות" />
     </div>
   );
 }

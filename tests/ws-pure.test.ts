@@ -16,7 +16,6 @@ register('data:text/javascript,' + encodeURIComponent(HOOK), import.meta.url);
 let T: typeof import('../lib/ws/types.ts');
 let L: typeof import('../lib/ws/labels.ts');
 let W: typeof import('../lib/ws/workshops.ts');
-let G: typeof import('../lib/ws/groups.ts');
 let A: typeof import('../lib/ws/attendance.ts');
 let D: typeof import('../lib/ws/deliverables.ts');
 let C: typeof import('../lib/ws/certificates.ts');
@@ -29,7 +28,6 @@ before(async () => {
   T = await import('../lib/ws/types.ts');
   L = await import('../lib/ws/labels.ts');
   W = await import('../lib/ws/workshops.ts');
-  G = await import('../lib/ws/groups.ts');
   A = await import('../lib/ws/attendance.ts');
   D = await import('../lib/ws/deliverables.ts');
   C = await import('../lib/ws/certificates.ts');
@@ -106,11 +104,6 @@ test('scoreRubric: missing criteria score 0 and out-of-range levels are clamped'
   assert.equal(D.scoreRubric(allAt(-3), D.DEMO_DAY_RUBRIC), 0);
   const first = D.DEMO_DAY_RUBRIC.criteria[0];
   assert.equal(D.scoreRubric({ [first.id]: 4 }, D.DEMO_DAY_RUBRIC), first.weight);
-});
-
-// ── teamNames ─────────────────────────────────────────────────────────
-test('teamNames returns the team and its personal variant', () => {
-  assert.deepEqual(G.teamNames('אופק · קבוצה 1'), ['אופק · קבוצה 1', 'אישי · אופק · קבוצה 1']);
 });
 
 // ── renderCertificateHtml ─────────────────────────────────────────────
@@ -226,19 +219,20 @@ test('every action the ws_* SQL writes to ws_events has a Hebrew label', () => {
 });
 
 // ── live training panel helpers ───────────────────────────────────────
-test('training helpers: team keys include the personal variant, group lookup resolves both, reasons are trimmed', async () => {
+test('training helpers: jobs are keyed by group id, group lookup resolves the number, reasons are trimmed', async () => {
   const TR = await import('../components/ws/p4/training-utils.ts');
-  const groups = [{ team_name: 'אופק · קבוצה 1', number: 1 }, { team_name: 'אופק · קבוצה 2', number: 2 }];
-  assert.deepEqual(TR.jobTeamKeys(groups), ['אופק · קבוצה 1', 'אישי · אופק · קבוצה 1', 'אופק · קבוצה 2', 'אישי · אופק · קבוצה 2']);
-  assert.deepEqual(TR.jobTeamKeys([groups[0], groups[0]]).length, 2);
-  assert.equal(TR.groupNumberForTeam(groups, 'אישי · אופק · קבוצה 2'), 2);
-  assert.equal(TR.groupNumberForTeam(groups, 'אופק · קבוצה 1'), 1);
-  assert.equal(TR.groupNumberForTeam(groups, 'מישהו אחר'), null);
+  const groups = [{ group_id: 'g1', number: 1 }, { group_id: 'g2', number: 2 }];
+  assert.deepEqual(TR.jobGroupIds(groups), ['g1', 'g2']);
+  assert.deepEqual(TR.jobGroupIds([groups[0], groups[0]]), ['g1']);
+  assert.deepEqual(TR.jobGroupIds([]), []);
+  assert.equal(TR.groupNumberForJob(groups, 'g2'), 2);
+  assert.equal(TR.groupNumberForJob(groups, 'g1'), 1);
+  assert.equal(TR.groupNumberForJob(groups, 'someone-else'), null);
   assert.equal(TR.cleanFailReason(null), null);
   assert.equal(TR.cleanFailReason('   '), null);
   assert.equal(TR.cleanFailReason('  נגמר הזמן ב-Colab '), 'נגמר הזמן ב-Colab');
   assert.equal(TR.cleanFailReason('א'.repeat(300))?.length, 200);
-  for (const s of ['pending', 'running', 'done', 'failed'] as const) assert.match(TR.JOB_STATUS_LABELS[s], /[\u0590-\u05FF]/);
+  for (const s of T.TRAINING_JOB_STATUSES) assert.match(TR.JOB_STATUS_LABELS[s], /[\u0590-\u05FF]/);
 });
 
 // ── curriculum.json mapping / roster cleaning ─────────────────────────

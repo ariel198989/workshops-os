@@ -27,8 +27,8 @@ export default function Page() {
   useEffect(() => {
     let live = true;
     getWorkshop(id).then((w) => { if (live) setWorkshop(w); }).catch(() => { if (live) setWorkshop(null); });
-    // team_prefix / code key Smart City data once any group has an sc_class
-    listGroups(id).then((gs) => { if (live) setActivated(gs.some((g) => g.sc_class_id !== null)); }).catch(() => undefined);
+    // team_prefix / code key the groups' photos and models once any group is activated
+    listGroups(id).then((gs) => { if (live) setActivated(gs.some((g) => g.activated_at !== null)); }).catch(() => undefined);
     return () => { live = false; };
   }, [id]);
 

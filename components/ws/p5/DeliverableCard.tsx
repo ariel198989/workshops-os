@@ -60,13 +60,13 @@ export function DeliverableCard({ row, editable, onChanged }: DeliverableCardPro
                 </Field>
               )}
               <Field label="מודל ותמונות">
-                <ModelSection row={row} team={team} disabled={readOnly} onChanged={onChanged} />
+                <ModelSection row={row} disabled={readOnly} onChanged={onChanged} />
               </Field>
               <Field label="מצגת">
                 <PresentationField row={row} disabled={readOnly} onChanged={onChanged} />
               </Field>
               <Field label="כשלי מודל">
-                <FailureCases team={team} cases={readFailureCases(row.failure_cases)} disabled={readOnly}
+                <FailureCases groupId={row.group_id} cases={readFailureCases(row.failure_cases)} disabled={readOnly}
                   onChange={async (next) => { await patchDeliverable(row.id, { failure_cases: next }); onChanged(); }} />
               </Field>
             </div>

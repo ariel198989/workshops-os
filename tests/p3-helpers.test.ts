@@ -199,11 +199,10 @@ test('dbErrorMessage turns the raw RPC sentences into Hebrew, whatever the SQLST
   assert.match(m('P0003', 'template_blocked'), /חסומה/);
   assert.match(m('P0004', 'device_not_allowed_for_band'), /מכשיר/);
   assert.match(m('P0001', 'template_blocked'), /חסומה/);
-  assert.match(m('23505', 'team name "x" already has Smart City data — change the workshop team_prefix'), /Smart City/);
   assert.match(m('P0002', 'no template for format sessions'), /אין תבנית/);
   assert.match(m('23514', 'group is full (capacity 4)'), /מלאה/);
   assert.match(m('23505', 'workshop already has sessions — edit them instead'), /מפגשים/);
-  const raws = ['template_blocked', 'device_not_allowed_for_band', 'already has Smart City data', 'no template for format', 'group is full'];
+  const raws = ['template_blocked', 'device_not_allowed_for_band', 'no template for format', 'group is full'];
   for (const raw of raws) assert.ok(!E.dbErrorMessage({ code: '', message: raw }).includes(raw), raw);
 });
 

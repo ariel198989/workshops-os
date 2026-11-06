@@ -104,7 +104,7 @@ const act = (
 
 const CANCEL = act('cancelled', 'ביטול הסדנה', 'לבטל את הסדנה?', 'danger', true);
 
-export const GO_LIVE_CONFIRM = 'פתיחת הסדנה מפעילה את הקבוצות הקיימות באפליקציית Smart City ומציגה אותן בהרשמה';
+export const GO_LIVE_CONFIRM = 'פתיחת הסדנה מפעילה את הקבוצות הקיימות ומציגה אותן לתלמידים בהרשמה';
 export const NEEDS_GROUPS_HINT = 'צרו קבוצות לפני הפתיחה';
 const GO_LIVE = act('live', 'פתיחת הסדנה', GO_LIVE_CONFIRM, 'primary');
 

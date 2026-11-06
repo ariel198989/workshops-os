@@ -1,7 +1,5 @@
 import { sb } from '../db';
-import type { CityModel, Detection } from '../types';
-import { teamNames } from './groups';
-import type { DeliverablePatch, WsDeliverable, WsGroup } from './types';
+import type { DeliverablePatch, WsDeliverable, WsGroup, WsModel, WsPhoto } from './types';
 
 export type DeliverableWithGroup = WsDeliverable & { group: Pick<WsGroup, 'number' | 'display_name' | 'team_name'> };
 
@@ -25,20 +23,24 @@ export async function lockDeliverable(groupId: string, modelId?: string): Promis
   return data as WsDeliverable;
 }
 
-export async function fetchTeamModels(team: string): Promise<CityModel[]> {
-  const { data, error } = await sb.from('sc_models').select('*')
-    .in('team_name', teamNames(team)).order('created_at', { ascending: false });
+/** The group's models (ws_models), newest first. */
+export async function fetchGroupModels(groupId: string): Promise<WsModel[]> {
+  const { data, error } = await sb.from('ws_models').select('*')
+    .eq('group_id', groupId).order('created_at', { ascending: false });
   if (error) throw error;
-  return data as CityModel[];
+  return data as WsModel[];
 }
 
-export async function fetchTeamPhotos(team: string, page: number, pageSize = 60): Promise<Detection[]> {
+export type GroupPhoto = Pick<WsPhoto, 'id' | 'class_name' | 'frame_path' | 'created_at'>;
+
+/** One page of the group's photos (ws_photos) that were not rejected, newest first. */
+export async function fetchGroupPhotos(groupId: string, page: number, pageSize = 60): Promise<GroupPhoto[]> {
   const from = Math.max(0, page) * pageSize;
-  const { data, error } = await sb.from('sc_detections').select('*')
-    .in('team_name', teamNames(team)).not('frame_path', 'is', null).neq('status', 'rejected')
+  const { data, error } = await sb.from('ws_photos').select('id, class_name, frame_path, created_at')
+    .eq('group_id', groupId).neq('status', 'rejected')
     .order('created_at', { ascending: false }).range(from, from + pageSize - 1);
   if (error) throw error;
-  return data as Detection[];
+  return data as GroupPhoto[];
 }
 
 const MIME_EXT: Record<string, string> = {

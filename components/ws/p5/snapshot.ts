@@ -45,6 +45,6 @@ export function readDatasetSnapshot(raw: JsonObject | null): DatasetSnapshotView
   };
 }
 
-/** sc_models.accuracy is a 0..1 mAP50. */
+/** ws_models.accuracy is a 0..1 mAP50. */
 export const formatAccuracy = (accuracy: number | null): string =>
   accuracy === null || accuracy === undefined ? '-' : `${Math.round(accuracy * 100)}%`;

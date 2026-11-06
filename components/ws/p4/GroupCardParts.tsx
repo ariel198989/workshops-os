@@ -93,7 +93,6 @@ export function StatusLines({ group }: { group: OverviewGroup }) {
           <>
             <span>{model.name}{acc ? `, ${acc}` : ''}</span>
             {model.approved ? <Pill label="מאושר" tone="teal" /> : null}
-            {model.personal ? <Pill label="אישי" tone="outline" /> : null}
           </>
         ) : <span className={styles.muted}>אין מודל עדיין</span>}
       </Line>

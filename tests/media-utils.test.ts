@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  STORAGE_REMOVE_CHUNK, chunkPaths, purgeDoneText, purgeRemainingText, readPurgeResult, uniquePaths,
+  STORAGE_REMOVE_CHUNK, chunkPaths, notRemoved, purgeDoneText, purgeRemainingText, readPurgeResult, uniquePaths,
 } from '../lib/ws/media-utils.ts';
 
 test('chunkPaths splits into chunks of 100 by default, order kept, last chunk shorter', () => {
@@ -23,6 +23,16 @@ test('chunkPaths: empty list gives no chunks, exact multiple gives no empty tail
 
 test('uniquePaths drops nulls, blanks and duplicates', () => {
   assert.deepEqual(uniquePaths(['a', null, 'b', '', 'a', undefined, '  ']), ['a', 'b']);
+});
+
+test('notRemoved lists the paths the bucket did not hand back', () => {
+  const chunk = ['w/1/g/2/p/a.jpg', 'w/1/g/2/p/b.jpg', 'w/1/g/2/jobs/c.zip'];
+  assert.deepEqual(notRemoved(chunk, chunk.map((name) => ({ name }))), []);
+  assert.deepEqual(notRemoved(chunk, [{ name: 'w/1/g/2/p/b.jpg' }]), ['w/1/g/2/p/a.jpg', 'w/1/g/2/jobs/c.zip']);
+  // nothing confirmed (no delete right, or the objects are not in this bucket): every path stays
+  assert.deepEqual(notRemoved(chunk, []), chunk);
+  assert.deepEqual(notRemoved(chunk, null), chunk);
+  assert.deepEqual(notRemoved([], [{ name: 'x' }]), []);
 });
 
 test('readPurgeResult reads the jsonb and tolerates garbage', () => {

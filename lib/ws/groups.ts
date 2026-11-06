@@ -17,14 +17,14 @@ export async function createGroups(workshopId: string, count?: number, activate 
   return data as WsGroup[];
 }
 
-// idempotent; only groups without sc_class_id are touched
+// idempotent; only groups that are not activated yet (activated_at is null) are touched
 export async function activateGroups(workshopId: string): Promise<WsGroup[]> {
   const { data, error } = await sb.rpc('ws_activate_groups', { p_workshop: workshopId });
   if (error) throw error;
   return data as WsGroup[];
 }
 
-// team_name / number / sc_class_id are not in the grant and never editable here
+// team_name / number / activated_at are not in the grant and never editable here
 export async function updateGroup(id: string, patch: GroupPatch): Promise<WsGroup> {
   const { data, error } = await sb.from('ws_groups').update(patch).eq('id', id).select().single();
   if (error) throw error;
@@ -44,6 +44,3 @@ export async function rotateJoinToken(groupId: string): Promise<string> {
   if (error) throw error;
   return data as string;
 }
-
-// The two sc_* team keys of a group: the team itself and its personal variant.
-export const teamNames = (team: string): [string, string] => [team, 'אישי · ' + team];

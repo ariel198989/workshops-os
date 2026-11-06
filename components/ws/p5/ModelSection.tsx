@@ -2,31 +2,29 @@
 import { useState } from 'react';
 import { Drawer } from '../Drawer';
 import { Spinner } from '@/components/ui/Spinner';
-import { fetchTeamModels } from '@/lib/ws/deliverables';
+import { fetchGroupModels } from '@/lib/ws/deliverables';
 import { toast } from '@/lib/store';
-import type { CityModel } from '@/lib/types';
-import type { WsDeliverable } from '@/lib/ws/types';
+import type { WsDeliverable, WsModel } from '@/lib/ws/types';
 import { patchDeliverable } from './api';
-import { ModelPicker, isPersonalModel } from './ModelPicker';
+import { ModelPicker } from './ModelPicker';
 import { PhotoGallery } from './PhotoGallery';
 import { formatAccuracy } from './snapshot';
 import { useLoad } from './useLoad';
 import styles from './p5.module.css';
 
 interface ModelSectionProps {
-  row: Pick<WsDeliverable, 'id' | 'model_id' | 'locked_at'>;
-  team: string;
+  row: Pick<WsDeliverable, 'id' | 'group_id' | 'model_id' | 'locked_at'>;
   disabled: boolean;
   onChanged: () => void;
 }
 
 /** Final model choice plus the group's photo gallery; both open in drawers. */
-export function ModelSection({ row, team, disabled, onChanged }: ModelSectionProps) {
+export function ModelSection({ row, disabled, onChanged }: ModelSectionProps) {
   const [drawer, setDrawer] = useState<'models' | 'photos' | null>(null);
-  const { data: models, error, loading } = useLoad(() => fetchTeamModels(team), [team]);
+  const { data: models, error, loading } = useLoad(() => fetchGroupModels(row.group_id), [row.group_id]);
   const current = models?.find((m) => m.id === row.model_id) ?? null;
 
-  const pick = async (m: CityModel) => {
+  const pick = async (m: WsModel) => {
     try {
       await patchDeliverable(row.id, { model_id: m.id });
       setDrawer(null);
@@ -44,7 +42,7 @@ export function ModelSection({ row, team, disabled, onChanged }: ModelSectionPro
         <p dir="auto">
           <span className="ink">{current.name}</span>{' '}
           <span className="hint">
-            דיוק {formatAccuracy(current.accuracy)}{current.approved ? ', מאושר' : ''}{isPersonalModel(current) ? ', אישי' : ''}
+            דיוק {formatAccuracy(current.accuracy)}{current.approved ? ', מאושר' : ''}
           </span>
         </p>
       ) : (
@@ -60,7 +58,7 @@ export function ModelSection({ row, team, disabled, onChanged }: ModelSectionPro
         <ModelPicker models={models ?? []} selectedId={row.model_id} disabled={disabled} onPick={(m) => void pick(m)} />
       </Drawer>
       <Drawer open={drawer === 'photos'} title="תמונות הקבוצה" width="680px" onClose={() => setDrawer(null)}>
-        <PhotoGallery team={team} />
+        <PhotoGallery groupId={row.group_id} />
       </Drawer>
     </div>
   );

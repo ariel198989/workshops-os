@@ -36,7 +36,7 @@ export async function updateWorkshop(id: string, patch: WorkshopPatch): Promise<
   return data as WsWorkshop;
 }
 
-// status is not in the column grant: transitions (and sc_classes activation) go through the RPC
+// status is not in the column grant: transitions (and group activation on go-live) go through the RPC
 export async function setWorkshopStatus(id: string, status: WorkshopStatus): Promise<WsWorkshop> {
   const { data, error } = await sb.rpc('ws_set_workshop_status', { p_workshop: id, p_status: status });
   if (error) throw error;

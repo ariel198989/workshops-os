@@ -23,6 +23,15 @@ export function uniquePaths(raw: readonly (string | null | undefined)[]): string
   return [...new Set(raw.filter((p): p is string => typeof p === 'string' && p.trim() !== ''))];
 }
 
+/**
+ * Paths of a chunk that storage remove() did not hand back. It returns the objects it really deleted, and a path
+ * with no object or no delete right is skipped without an error, so a silent miss must not count as removed.
+ */
+export function notRemoved(chunk: readonly string[], removed: readonly { name?: string | null }[] | null): string[] {
+  const done = new Set((removed ?? []).map((o) => o.name));
+  return chunk.filter((p) => !done.has(p));
+}
+
 /** Reads the jsonb result defensively; any malformed field becomes empty. */
 export function readPurgeResult(raw: unknown): PurgeRpcResult {
   const obj = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;

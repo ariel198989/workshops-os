@@ -31,7 +31,6 @@ function checkMessage(msg: string): string {
 const BY_MESSAGE: readonly [RegExp, string][] = [
   [/template_blocked/, 'התבנית חסומה ואי אפשר להריץ אותה כרגע'],
   [/device_not_allowed_for_band/, 'מצב המכשיר הזה לא מותר לשכבה שנבחרה. ביסודי אין טלפונים אישיים'],
-  [/already has Smart City data/, 'שם הקבוצה כבר קיים ב-Smart City. שנו את קידומת הקבוצות של הסדנה'],
   [/no template for format/, 'אין תבנית תוכנית לפורמט של הסדנה. בחרו תבנית בהגדרות או צרו אחת'],
   [/group is full/, 'הקבוצה מלאה'],
   [/already has sessions/, 'לסדנה כבר יש מפגשים'],

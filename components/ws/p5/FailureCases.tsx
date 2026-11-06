@@ -1,14 +1,15 @@
 'use client';
 import { useState } from 'react';
 import { Drawer } from '../Drawer';
-import { publicUrl } from '@/lib/db';
 import { toast } from '@/lib/store';
 import { FAILURE_KINDS, FAILURE_KIND_LABELS, type FailureCase, type FailureKind } from './validation';
+import { MediaNotice } from './MediaNotice';
 import { PhotoGallery } from './PhotoGallery';
+import { useMediaUrls } from './useMediaUrls';
 import styles from './p5.module.css';
 
 interface FailureCasesProps {
-  team: string;
+  groupId: string;
   cases: readonly FailureCase[];
   disabled: boolean;
   /** persist the whole list; throws on failure */
@@ -18,8 +19,9 @@ interface FailureCasesProps {
 const isKind = (v: string): v is FailureKind => (FAILURE_KINDS as readonly string[]).includes(v);
 
 /** Cases the model got wrong: frame, kind (miss / false hit / confusion) and a short note. */
-export function FailureCases({ team, cases, disabled, onChange }: FailureCasesProps) {
+export function FailureCases({ groupId, cases, disabled, onChange }: FailureCasesProps) {
   const [picking, setPicking] = useState(false);
+  const media = useMediaUrls(cases.map((c) => c.frame_path));
 
   const commit = async (next: FailureCase[]) => {
     try {
@@ -34,10 +36,11 @@ export function FailureCases({ team, cases, disabled, onChange }: FailureCasesPr
   return (
     <div className="stack">
       {cases.length === 0 ? <p className="hint">לא תועדו כשלים.</p> : null}
+      <MediaNotice media={media} />
       {cases.map((c, i) => (
         <div key={`${c.frame_path}-${i}`} className={styles.failureRow}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={publicUrl(c.frame_path)} alt="" loading="lazy" className={styles.failureThumb} />
+          <img src={media.urls[c.frame_path]} alt="" loading="lazy" className={styles.failureThumb} />
           <select value={c.kind} disabled={disabled} aria-label="סוג כשל"
             onChange={(e) => { if (isKind(e.target.value)) void update(i, { kind: e.target.value }); }}>
             {FAILURE_KINDS.map((k) => <option key={k} value={k}>{FAILURE_KIND_LABELS[k]}</option>)}
@@ -53,8 +56,8 @@ export function FailureCases({ team, cases, disabled, onChange }: FailureCasesPr
       ))}
       {disabled ? null : <button type="button" className="sm" onClick={() => setPicking(true)}>הוספת כשל</button>}
       <Drawer open={picking} title="בחירת תמונה לכשל" width="640px" onClose={() => setPicking(false)}>
-        <PhotoGallery team={team} pickLabel="הוסף ככשל" onPick={(photo) => {
-          if (photo.frame_path) void commit([...cases, { frame_path: photo.frame_path, note: '', kind: 'confusion' }]);
+        <PhotoGallery groupId={groupId} pickLabel="הוסף ככשל" onPick={(photo) => {
+          void commit([...cases, { frame_path: photo.frame_path, note: '', kind: 'confusion' }]);
           setPicking(false);
         }} />
       </Drawer>

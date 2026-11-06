@@ -1,22 +1,21 @@
 // Pure helpers for the live training panel (no React, unit tested).
-import { teamNames } from '../../../lib/ws/groups';
-import type { TrainingJobStatus } from '../../../lib/ws/training';
+import type { TrainingJobStatus } from '../../../lib/ws/types';
 
 export const JOB_STATUS_LABELS: Record<TrainingJobStatus, string> = {
-  pending: 'ממתין', running: 'רץ', done: 'הושלם', failed: 'נכשל',
+  pending: 'ממתין', running: 'רץ', done: 'הושלם', failed: 'נכשל', cancelled: 'בוטל',
 };
 
 export const FAIL_REASON_PROMPT = 'סיבת הכישלון (תוצג לקבוצה ולצוות)';
 export const FAIL_REASON_REQUIRED = 'נדרשת סיבה כדי לסמן אימון כנכשל';
 
-/** sc_* rows are keyed by team_name: each group has its team and a personal variant. Order and uniqueness kept. */
-export function jobTeamKeys(groups: readonly { team_name: string }[]): string[] {
-  return [...new Set(groups.flatMap((g) => teamNames(g.team_name)))];
+/** Training jobs are keyed by group_id. Order and uniqueness kept. */
+export function jobGroupIds(groups: readonly { group_id: string }[]): string[] {
+  return [...new Set(groups.map((g) => g.group_id))];
 }
 
-/** Group number for a job's team key (personal variants resolve to their group), or null when unknown. */
-export function groupNumberForTeam(groups: readonly { team_name: string; number: number }[], teamKey: string): number | null {
-  const hit = groups.find((g) => teamNames(g.team_name).includes(teamKey));
+/** Group number for a job's group_id, or null when the group is not on the board. */
+export function groupNumberForJob(groups: readonly { group_id: string; number: number }[], groupId: string): number | null {
+  const hit = groups.find((g) => g.group_id === groupId);
   return hit ? hit.number : null;
 }
 

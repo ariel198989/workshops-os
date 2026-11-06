@@ -1,9 +1,9 @@
-import { BUCKET } from '../config';
+import { MEDIA_BUCKET } from '../config';
 import { sb } from '../db';
-import { chunkPaths, readPurgeResult, type PurgeRpcResult } from './media-utils';
+import { chunkPaths, notRemoved, readPurgeResult, type PurgeRpcResult } from './media-utils';
 
-// ws_purge_workshop_media (migration 0011): admin only, workshop completed / archived / cancelled.
-// It deletes the photo and job rows and returns the storage paths; removing the objects is the console's job.
+// ws_purge_workshop_media (migrations 0011, 0017): admin only, workshop completed / archived / cancelled.
+// It deletes the photo and job rows and returns their ws-media paths; removing the objects is the console's job.
 
 export async function purgeWorkshopMedia(workshopId: string): Promise<PurgeRpcResult> {
   const { data, error } = await sb.rpc('ws_purge_workshop_media', { p_workshop: workshopId });
@@ -12,20 +12,18 @@ export async function purgeWorkshopMedia(workshopId: string): Promise<PurgeRpcRe
 }
 
 export interface RemoveResult {
-  /** paths the bucket accepted for deletion */
+  /** paths the bucket really deleted */
   removed: number;
-  /** paths still in the bucket after a failed chunk (the storage policy needs is_thinkcv_admin) */
+  /** paths still there: the chunk failed, or the bucket did not confirm them (no object, or no delete right) */
   remaining: string[];
 }
 
-/** Removes objects from the public bucket in chunks of 100; a failing chunk is kept whole in `remaining`. */
+/** Removes objects from the private ws-media bucket in chunks of 100; whatever is not confirmed goes to `remaining`. */
 export async function removeStoragePaths(paths: readonly string[]): Promise<RemoveResult> {
-  let removed = 0;
   const remaining: string[] = [];
   for (const chunk of chunkPaths(paths)) {
-    const { error } = await sb.storage.from(BUCKET).remove(chunk);
-    if (error) remaining.push(...chunk);
-    else removed += chunk.length;
+    const { data, error } = await sb.storage.from(MEDIA_BUCKET).remove(chunk);
+    remaining.push(...(error ? chunk : notRemoved(chunk, data)));
   }
-  return { removed, remaining };
+  return { removed: paths.length - remaining.length, remaining };
 }

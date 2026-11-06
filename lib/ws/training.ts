@@ -1,24 +1,17 @@
 import { sb } from '../db';
+import type { TrainingJobStatus, WsTrainingJob } from './types';
 
-// sc_training_jobs (Smart City): the console only reads the open jobs of its own teams and can fail one.
-export type TrainingJobStatus = 'pending' | 'running' | 'done' | 'failed';
-export interface TrainingJob {
-  id: string;
-  team_name: string;
-  status: TrainingJobStatus;
-  image_count: number | null;
-  created_at: string;
-  started_at: string | null;
-}
+// ws_training_jobs (migration 0017): the console only reads the open jobs of its own groups and can fail one.
+export type TrainingJob = Pick<WsTrainingJob, 'id' | 'group_id' | 'team_name' | 'status' | 'image_count' | 'created_at' | 'started_at'>;
 
 export const OPEN_JOB_STATUSES: readonly TrainingJobStatus[] = ['pending', 'running'];
 
-/** Pending / running jobs of the given team keys (team names and their personal variants), newest first. */
-export async function listOpenTrainingJobs(teamKeys: readonly string[]): Promise<TrainingJob[]> {
-  if (teamKeys.length === 0) return [];
-  const { data, error } = await sb.from('sc_training_jobs')
-    .select('id, team_name, status, image_count, created_at, started_at')
-    .in('team_name', teamKeys).in('status', OPEN_JOB_STATUSES)
+/** Pending / running jobs of the given groups, newest first. */
+export async function listOpenTrainingJobs(groupIds: readonly string[]): Promise<TrainingJob[]> {
+  if (groupIds.length === 0) return [];
+  const { data, error } = await sb.from('ws_training_jobs')
+    .select('id, group_id, team_name, status, image_count, created_at, started_at')
+    .in('group_id', groupIds).in('status', OPEN_JOB_STATUSES)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data as TrainingJob[];

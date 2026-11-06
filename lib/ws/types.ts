@@ -29,6 +29,9 @@ export const RELEASE_STATUSES = ['live', 'draft', 'blocked'] as const;
 // migration 20261101_0016: who shares photos, tags and the model. 'personal' = every student their own pool and
 // model (default); 'group' = one pool and one model for the whole group. Merging is a later facilitator feature.
 export const POOL_SCOPES = ['personal', 'group'] as const;
+// migration 20261106_0017: the workshops' own photos, training jobs and models (ws_photos, ws_training_jobs, ws_models)
+export const PHOTO_STATUSES = ['dataset', 'rejected'] as const;
+export const TRAINING_JOB_STATUSES = ['pending', 'running', 'done', 'failed', 'cancelled'] as const;
 
 export type WorkshopStatus = (typeof WORKSHOP_STATUSES)[number];
 export type SessionStatus = (typeof SESSION_STATUSES)[number];
@@ -58,6 +61,8 @@ export type FieldEntity = 'organization' | 'workshop' | 'group' | 'participant';
 export type FieldType = 'text' | 'number' | 'date' | 'boolean' | 'select' | 'multiselect' | 'url';
 export type Sector = 'education' | 'municipal' | 'industry' | 'ngo' | 'other';
 export type Readiness = 'no_targets' | 'red' | 'ok' | 'strong';
+export type PhotoStatus = (typeof PHOTO_STATUSES)[number];
+export type TrainingJobStatus = (typeof TRAINING_JOB_STATUSES)[number];
 
 export type JsonObject = Record<string, unknown>;
 type Stamped = { created_at: string; updated_at: string };
@@ -104,7 +109,7 @@ export interface WsWorkshop extends Stamped {
   starts_on: string | null; ends_on: string | null; timezone: string; sector: Sector;
   grade_level: string | null; class_label: string | null; homeroom_teacher: string | null;
   audience_size: number | null; group_size: number; location: string | null; device_mode: DeviceMode;
-  cycle_depth: CycleDepth; band: Band | null; tablets_count: number | null; sc_campaign_id: string | null;
+  cycle_depth: CycleDepth; band: Band | null; tablets_count: number | null;
   custom_fields: JsonObject; notes: string | null; created_by: string | null;
   // migration 0015: 4-digit workshop number children type in the student app; set by the DB when the
   // status becomes confirmed/live, null otherwise, rotated via ws_rotate_short_code (not client-updatable)
@@ -140,7 +145,7 @@ export interface WsSubproblem extends Stamped {
 }
 export interface WsGroup extends Stamped {
   id: string; workshop_id: string; number: number; display_name: string | null; team_name: string;
-  sc_class_id: string | null; subproblem_id: string | null; capacity: number | null;
+  subproblem_id: string | null; capacity: number | null;
   color: string | null; status: GroupStatus; activated_at: string | null; notes: string | null;
   // migration 0013: tablet sign-in PIN (4 digits, rotated via ws_rotate_group_pin), public take-home token
   pin: string | null; share_token: string | null; device_user_id: string | null;
@@ -175,12 +180,32 @@ export interface WsEvent {
   id: number; workshop_id: string | null; actor: string | null; action: string; entity: string | null;
   entity_id: string | null; payload: JsonObject; created_at: string;
 }
+// Media rows (0017) are read-only for the console: staff of the workshop may select, nothing else.
+export interface WsPhoto {
+  id: string; workshop_id: string; group_id: string; team_name: string; class_name: string;
+  /** object key in the private ws-media bucket; shown through a signed URL */
+  frame_path: string; bbox: { x: number; y: number; w: number; h: number } | null;
+  status: PhotoStatus; detected_by: string | null; created_at: string;
+}
+export interface WsTrainingJob {
+  id: string; workshop_id: string; group_id: string; team_name: string; status: TrainingJobStatus;
+  pool_zip_path: string | null; image_count: number; classes: string[]; requested_by: string | null;
+  result_model_id: string | null; created_at: string; started_at: string | null;
+  completed_at: string | null; failure_reason: string | null;
+}
+export interface WsModel {
+  id: string; workshop_id: string; group_id: string; team_name: string; owner: string | null; name: string;
+  classes: string[]; zip_path: string; approved: boolean;
+  /** mAP50 in 0..1 from training */
+  accuracy: number | null; image_count: number | null; honest_val: boolean | null; scope: string;
+  class_stats: unknown; created_at: string;
+}
 
 // Insert/patch shapes follow the column-level grants in section 3.7.
 export type WorkshopInsert = Pick<WsWorkshop, 'organization_id' | 'code' | 'team_prefix' | 'title'> &
   Partial<Pick<WsWorkshop, 'format' | 'template_id' | 'starts_on' | 'ends_on' | 'timezone' | 'sector'
     | 'grade_level' | 'class_label' | 'homeroom_teacher' | 'audience_size' | 'group_size' | 'location'
-    | 'device_mode' | 'cycle_depth' | 'band' | 'tablets_count' | 'sc_campaign_id' | 'custom_fields' | 'notes'>>;
+    | 'device_mode' | 'cycle_depth' | 'band' | 'tablets_count' | 'custom_fields' | 'notes'>>;
 // pool_scope is update-only (0016 grants update, not insert): the new-workshop form saves it right after the insert
 export type WorkshopPatch = Partial<WorkshopInsert> & Partial<Pick<WsWorkshop, 'pool_scope'>>;
 export type GroupPatch = Partial<Pick<WsGroup, 'display_name' | 'subproblem_id' | 'capacity' | 'color' | 'notes' | 'status'>>;
@@ -205,8 +230,7 @@ export interface OverviewGroup {
   coverage: ClassCoverage[]; off_target_classes: ClassCoverage[]; readiness: Readiness;
   jobs: { pending: number; running: number; done: number; last: JsonObject | null };
   model: { id: string; name: string; accuracy: number | null; approved: boolean; scope: string;
-    image_count: number | null; honest_val: boolean | null; class_stats: unknown; personal: boolean;
-    created_at: string } | null;
+    image_count: number | null; honest_val: boolean | null; class_stats: unknown; created_at: string } | null;
   models_count: number; attendance_rate: number | null;
   deliverable: { status: DeliverableStatus; final_model_id: string | null; presentation_url: string | null;
     demo_result: DemoResult | null; demo_score: number | null; locked: boolean } | null;

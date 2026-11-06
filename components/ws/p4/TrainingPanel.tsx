@@ -9,7 +9,7 @@ import type { OverviewGroup, PoolScope } from '@/lib/ws/types';
 import { formatDateTime } from './format';
 import { errorText, useLoader } from './hooks';
 import {
-  FAIL_REASON_PROMPT, FAIL_REASON_REQUIRED, JOB_STATUS_LABELS, cleanFailReason, groupNumberForTeam, jobTeamKeys,
+  FAIL_REASON_PROMPT, FAIL_REASON_REQUIRED, JOB_STATUS_LABELS, cleanFailReason, groupNumberForJob, jobGroupIds,
 } from './training-utils';
 import styles from './board.module.css';
 
@@ -23,14 +23,14 @@ interface TrainingPanelProps {
   poolScope?: PoolScope;
 }
 
-const TONE: Record<TrainingJob['status'], 'amber' | 'blue' | 'green' | 'red'> = {
-  pending: 'amber', running: 'blue', done: 'green', failed: 'red',
+const TONE: Record<TrainingJob['status'], 'amber' | 'blue' | 'green' | 'red' | 'gray'> = {
+  pending: 'amber', running: 'blue', done: 'green', failed: 'red', cancelled: 'gray',
 };
 
-/** Live-session view of the Smart City trainer: open jobs of this workshop's teams, Colab link, fail action. */
+/** Live-session view of the trainer: open jobs of this workshop's groups, Colab link, fail action. */
 export function TrainingPanel({ groups, canEdit, refreshKey, poolScope = DEFAULT_POOL_SCOPE }: TrainingPanelProps) {
-  const keys = jobTeamKeys(groups);
-  const { data: jobs, error, loading, reload } = useLoader(() => listOpenTrainingJobs(keys), `${keys.join('|')}#${refreshKey}`);
+  const ids = jobGroupIds(groups);
+  const { data: jobs, error, loading, reload } = useLoader(() => listOpenTrainingJobs(ids), `${ids.join('|')}#${refreshKey}`);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const fail = async (job: TrainingJob) => {
@@ -65,7 +65,7 @@ export function TrainingPanel({ groups, canEdit, refreshKey, poolScope = DEFAULT
       {jobs && jobs.length > 0 ? (
         <ul className={styles.jobs}>
           {jobs.map((j) => {
-            const no = groupNumberForTeam(groups, j.team_name);
+            const no = groupNumberForJob(groups, j.group_id);
             return (
               <li key={j.id} className={styles.job}>
                 <span className={styles.jobTeam}>
@@ -74,7 +74,7 @@ export function TrainingPanel({ groups, canEdit, refreshKey, poolScope = DEFAULT
                 </span>
                 <Pill label={JOB_STATUS_LABELS[j.status]} tone={TONE[j.status]} />
                 <span className={styles.jobMeta}>
-                  {j.image_count !== null ? `${j.image_count} תמונות · ` : ''}
+                  {`${j.image_count} תמונות · `}
                   {j.status === 'running' && j.started_at ? `התחיל ${formatDateTime(j.started_at)}` : `נוצר ${formatDateTime(j.created_at)}`}
                 </span>
                 {canEdit ? (

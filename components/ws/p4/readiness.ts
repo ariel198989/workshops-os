@@ -29,7 +29,7 @@ const TIER_LABELS: Record<Tier, string> = {
 
 export const tierLabel = (tier: Tier): string => TIER_LABELS[tier];
 
-/** sc_models.accuracy is mAP50 in 0..1; tolerate values already in percent. */
+/** ws_models.accuracy is mAP50 in 0..1; tolerate values already in percent. */
 export function formatAccuracy(accuracy: number | null): string | null {
   if (accuracy === null || !Number.isFinite(accuracy)) return null;
   const pct = accuracy <= 1 ? accuracy * 100 : accuracy;
