@@ -244,8 +244,6 @@ export interface Overview {
   unassigned_participants: number;
   sessions: { id: string; session_no: number; title: string; status: SessionStatus; scheduled_at: string | null }[];
 }
-export interface DriftEntry { participant_id: string; full_name: string; expected_team: string; app_team: string | null }
-export interface ReconcileResult { added: number; drift: DriftEntry[] }
 export type SkipReason = 'already_issued' | 'attendance' | 'deliverable';
 export interface IssueResult {
   issued: number;

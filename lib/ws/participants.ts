@@ -1,5 +1,5 @@
 import { sb } from '../db';
-import type { ParticipantPatch, ReconcileResult, WsParticipant } from './types';
+import type { ParticipantPatch, WsParticipant } from './types';
 import { mergePrivate, PARTICIPANT_COLUMNS, type ParticipantPrivate, type ParticipantPublic } from './participant-private';
 
 const MAX_NAME = 80;
@@ -58,12 +58,6 @@ export async function updateParticipant(id: string, patch: ParticipantPatch): Pr
     .select(PARTICIPANT_COLUMNS).single();
   if (error) throw error;
   return data as unknown as ParticipantPublic;
-}
-
-export async function reconcile(workshopId: string): Promise<ReconcileResult> {
-  const { data, error } = await sb.rpc('ws_reconcile_participants', { p_workshop: workshopId });
-  if (error) throw error;
-  return data as ReconcileResult;
 }
 
 export async function linkParticipant(participantId: string, userId: string): Promise<WsParticipant> {

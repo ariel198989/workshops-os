@@ -2,10 +2,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/lib/store';
 import { listGroups } from '@/lib/ws/groups';
-import { listParticipants, moveParticipant, reconcile, type ParticipantWithGroup } from '@/lib/ws/participants';
+import { listParticipants, moveParticipant, type ParticipantWithGroup } from '@/lib/ws/participants';
 import { usePolling } from '@/lib/ws/poll';
 import { fetchOverview, getWorkshop, listSubproblems } from '@/lib/ws/workshops';
-import type { DriftEntry, Overview, WsGroup, WsSubproblem, WsWorkshop } from '@/lib/ws/types';
+import type { Overview, WsGroup, WsSubproblem, WsWorkshop } from '@/lib/ws/types';
 import { applyMove } from './drag';
 import { errorText } from './hooks';
 
@@ -23,28 +23,24 @@ export interface Board {
   patchGroupRow: (groupId: string, patch: Partial<WsGroup>) => void;
   /** e.g. a rotated workshop number: the row is refetched only on a full reload */
   patchWorkshop: (patch: Partial<WsWorkshop>) => void;
-  drift: DriftEntry[];
   loading: boolean;
   error: string | null;
   refreshing: boolean;
   polling: boolean;
   refresh: () => Promise<void>;
   move: (participantId: string, groupId: string | null) => Promise<void>;
-  /** re-applies the participant's current group so the phone's team is rewritten (drift fix) */
-  resync: (participantId: string) => Promise<void>;
 }
 
 /**
  * State of the live groups board. Loads once, then polls every 20 s only while the workshop is live
- * and the tab is visible (usePolling pauses on document.hidden). Reconcile runs in the same tick for editors.
+ * and the tab is visible (usePolling pauses on document.hidden).
  */
-export function useBoard(workshopId: string, canEdit: boolean): Board {
+export function useBoard(workshopId: string): Board {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [workshop, setWorkshop] = useState<WsWorkshop | null>(null);
   const [people, setPeople] = useState<ParticipantWithGroup[]>([]);
   const [subproblems, setSubproblems] = useState<WsSubproblem[]>([]);
   const [groupRows, setGroupRows] = useState<WsGroup[]>([]);
-  const [drift, setDrift] = useState<DriftEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,16 +51,6 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
   });
 
   const tick = useCallback(async () => {
-    if (canEdit) {
-      // a failing reconcile must not hide the board
-      try {
-        const r = await reconcile(workshopId);
-        setDrift(r.drift);
-        if (r.added > 0) toast(`נוספו ${r.added} משתתפים`, true);
-      } catch (err) {
-        toast(errorText(err, 'סנכרון המשתתפים נכשל'));
-      }
-    }
     // the rows carry the PINs; a failing read keeps the previous rows instead of hiding the board
     const [ov, ppl, rows] = await Promise.all([
       fetchOverview(workshopId), listParticipants(workshopId), listGroups(workshopId).catch(() => null),
@@ -74,7 +60,7 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
     if (rows) setGroupRows(rows);
     setError(null);
     loadedAt.current = Date.now();
-  }, [workshopId, canEdit]);
+  }, [workshopId]);
 
   useEffect(() => {
     let alive = true;
@@ -107,24 +93,18 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
     }
   }, [tick]);
 
-  const move = useCallback(async (participantId: string, groupId: string | null, force = false) => {
+  const move = useCallback(async (participantId: string, groupId: string | null) => {
     const before = peopleRef.current;
-    if (!force && before.find((p) => p.id === participantId)?.group_id === groupId) return;
+    if (before.find((p) => p.id === participantId)?.group_id === groupId) return;
     setPeople(applyMove(before, participantId, groupId));
     try {
       await moveParticipant(participantId, groupId);
-      setDrift((d) => d.filter((x) => x.participant_id !== participantId));
       fetchOverview(workshopId).then(setOverview).catch(() => undefined);
     } catch (err) {
       setPeople(before);
       toast(errorText(err, 'ההעברה נכשלה'));
     }
   }, [workshopId]);
-
-  const resync = useCallback(async (participantId: string) => {
-    const groupId = peopleRef.current.find((p) => p.id === participantId)?.group_id;
-    if (groupId) await move(participantId, groupId, true);
-  }, [move]);
 
   const patchGroupRow = useCallback((groupId: string, patch: Partial<WsGroup>) => {
     setGroupRows((rows) => rows.map((g) => (g.id === groupId ? { ...g, ...patch } : g)));
@@ -135,7 +115,7 @@ export function useBoard(workshopId: string, canEdit: boolean): Board {
   }, []);
 
   return {
-    overview, workshop, people, subproblems, groupRows, patchGroupRow, patchWorkshop, drift, loading, error, refreshing, polling,
-    refresh, move, resync,
+    overview, workshop, people, subproblems, groupRows, patchGroupRow, patchWorkshop, loading, error, refreshing, polling,
+    refresh, move,
   };
 }

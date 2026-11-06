@@ -12,7 +12,6 @@ import { activateGroups, rotateGroupPin, rotateJoinToken, updateGroup } from '@/
 import { normalizePoolScope } from '@/lib/ws/pool-scope';
 import type { GroupPatch } from '@/lib/ws/types';
 import { CreateGroupsForm } from '@/components/ws/p4/CreateGroupsForm';
-import { DriftBanner } from '@/components/ws/p4/DriftBanner';
 import { EntryCardsPrint } from '@/components/ws/p4/EntryCardsPrint';
 import type { GroupAccessActions } from '@/components/ws/p4/GroupAccess';
 import { GroupCard } from '@/components/ws/p4/GroupCard';
@@ -36,7 +35,7 @@ const PROJECTOR_QR_SIZE = 220;
 export default function GroupsPage() {
   const id = useWorkshopId();
   const canEdit = useCanEdit(id);
-  const board = useBoard(id, canEdit);
+  const board = useBoard(id);
   const liveHandle = useLiveState(id);
   const [projector, setProjector] = useState(false);
   const [projectorQr, setProjectorQr] = useState(false);
@@ -53,7 +52,6 @@ export default function GroupsPage() {
     return map;
   }, [active]);
   const unassigned = useMemo(() => active.filter((p) => p.group_id === null), [active]);
-  const movable = useMemo(() => new Set(active.filter((p) => p.group_id).map((p) => p.id)), [active]);
   const rowById = useMemo(() => new Map(board.groupRows.map((g) => [g.id, g])), [board.groupRows]);
 
   const patchGroup = async (groupId: string, patch: GroupPatch) => {
@@ -140,8 +138,6 @@ export default function GroupsPage() {
               ) : null}
             </div>
           </div>
-
-          <DriftBanner drift={board.drift} canEdit={canEdit} movable={movable} onSync={(pid) => void board.resync(pid)} />
 
           {groups.length > 0 ? <LiveStepBar workshopId={id} sessions={overview.sessions} canEdit={canEdit} handle={liveHandle} /> : null}
           {groups.length > 0 ? <TrainingPanel groups={groups} canEdit={canEdit} refreshKey={overview.generated_at} poolScope={poolScope} /> : null}
