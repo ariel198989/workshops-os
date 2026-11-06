@@ -98,6 +98,8 @@ export interface WsCurriculumTemplate extends Stamped {
   parent_template_id: string | null; created_by: string | null;
   band: Band | null; cycle_depth: CycleDepth | null; default_device_mode: DeviceMode | null;
   release_status: ReleaseStatus; ai_gate_note: string | null; requires_product: string[];
+  /** 0022: story frame + session openers (read with normalizeStory) */
+  story?: unknown;
 }
 export interface WsTemplateModule {
   id: string; template_id: string; module_id: string; session_no: number; position: number;

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Layers01Icon } from '@hugeicons/core-free-icons';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
+import { StoryFrame } from '@/components/ws/StoryParts';
 import { ModulePicker } from '@/components/ws/p6/ModulePicker';
 import { TemplateHeader } from '@/components/ws/p6/TemplateHeader';
 import { TemplateModuleList } from '@/components/ws/p6/TemplateModuleList';
@@ -14,6 +15,7 @@ import { useTemplateBoard } from '@/components/ws/p6/useTemplateBoard';
 import styles from '@/components/ws/p6/board.module.css';
 import { useStore } from '@/lib/store';
 import { isAdmin, isCoreStaff, wsAuthStore } from '@/lib/ws/staff';
+import { normalizeStory } from '@/lib/ws/story';
 
 const TYPE_COLORS: Record<keyof typeof TYPE_TONES, string> = {
   theory: '#2563EB', practice: '#17948C', demo: '#D97706', mixed: '#0F1C2E',
@@ -38,11 +40,13 @@ export default function TemplatePage() {
 
   const total = totalMinutes(board.items);
   const sessions = board.columns.filter((c) => c.ids.length > 0).length;
+  const story = normalizeStory(board.tpl.story);
 
   return (
     <>
       <TemplateHeader template={board.tpl} canEdit={canEdit} admin={admin} sessions={sessions} minutes={total}
         onChanged={(next) => board.setTpl((cur) => (cur ? { ...cur, ...next } : cur))} />
+      {story ? <StoryFrame story={story} /> : null}
       <div className={styles.legend}>
         {(Object.keys(TYPE_COLORS) as (keyof typeof TYPE_COLORS)[]).map((k) => (
           <span key={k}><i style={{ background: TYPE_COLORS[k] }} />{typeLabel(k)}</span>
@@ -56,7 +60,7 @@ export default function TemplatePage() {
         <TemplateModuleList columns={board.columns} rows={board.rows} items={board.items}
           target={sessionTarget(board.tpl.format, total)} canEdit={canEdit}
           onMove={board.move} onRemove={(rowId) => void board.remove(rowId)}
-          onAdd={setPickFor} onAddSession={board.addSession} />
+          onAdd={setPickFor} onAddSession={board.addSession} story={story} />
       )}
       <ModulePicker open={pickFor !== null} sessionNo={pickFor ?? 1} onClose={() => setPickFor(null)}
         onPick={(moduleId) => { const s = pickFor; setPickFor(null); if (s !== null) void board.add(s, moduleId); }} />

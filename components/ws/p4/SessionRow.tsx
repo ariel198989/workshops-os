@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { InlineEdit, type InlineOption } from '@/components/ws/InlineEdit';
+import { OpenerBox } from '@/components/ws/StoryParts';
 import { StatusPill } from '@/components/ws/StatusPill';
 import { toast } from '@/lib/store';
 import { labelOf } from '@/lib/ws/labels';
 import { updateSession, type SessionPatch } from '@/lib/ws/workshops';
+import type { StorySession } from '@/lib/ws/story';
 import { SESSION_STATUSES, type SessionStatus, type WsSession, type WsSessionModule } from '@/lib/ws/types';
 import { formatDateTime } from './format';
 import { errorText } from './hooks';
@@ -20,10 +22,12 @@ interface SessionRowProps {
   canEdit: boolean;
   onToggle: () => void;
   onOpenModule: (module: WsSessionModule) => void;
+  /** the template's 3-minute opener for this session number (0022), read-only */
+  opener?: StorySession | null;
 }
 
 /** One meeting: collapsed header, expanded editable fields and its modules. */
-export function SessionRow({ session, open, canEdit, onToggle, onOpenModule }: SessionRowProps) {
+export function SessionRow({ session, open, canEdit, onToggle, onOpenModule, opener = null }: SessionRowProps) {
   const [s, setS] = useState(session);
   const [busy, setBusy] = useState(false);
 
@@ -56,6 +60,7 @@ export function SessionRow({ session, open, canEdit, onToggle, onOpenModule }: S
       </button>
       {open ? (
         <div className={styles.sBody}>
+          {opener ? <OpenerBox session={opener} /> : null}
           <div className={styles.fields}>
             <div className={styles.fieldBox}>
               <span className="lbl">מועד</span>

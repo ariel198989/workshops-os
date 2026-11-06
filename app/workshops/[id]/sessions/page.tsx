@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { listSessions } from '@/lib/ws/workshops';
+import { getTemplateStory } from '@/lib/ws/curriculum';
+import { openerFor, type TemplateStory } from '@/lib/ws/story';
+import { getWorkshop, listSessions } from '@/lib/ws/workshops';
 import type { WsSessionModule } from '@/lib/ws/types';
 import { InstantiateEmpty } from '@/components/ws/p4/InstantiateEmpty';
 import { LoadGate } from '@/components/ws/p4/LoadGate';
@@ -15,10 +17,24 @@ function hashSessionNo(): number | null {
   return m ? Number(m[1]) : null;
 }
 
+/** The template's openers are a nice-to-have: a failing read shows the sessions without them. */
+async function loadStory(workshopId: string): Promise<TemplateStory | null> {
+  try {
+    const w = await getWorkshop(workshopId);
+    return w.template_id ? await getTemplateStory(w.template_id) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function SessionsPage() {
   const id = useWorkshopId();
   const canEdit = useCanEdit(id);
-  const { data: sessions, error, loading, reload } = useLoader(() => listSessions(id), id);
+  const { data, error, loading, reload } = useLoader(async () => {
+    const [sessions, story] = await Promise.all([listSessions(id), loadStory(id)]);
+    return { sessions, story };
+  }, id);
+  const sessions = data?.sessions ?? null;
   const [openNo, setOpenNo] = useState<number | null>(null);
   const [module, setModule] = useState<WsSessionModule | null>(null);
 
@@ -50,7 +66,7 @@ export default function SessionsPage() {
             {sessions.map((s) => (
               <SessionRow key={s.id} session={s} canEdit={canEdit} open={openNo === s.session_no}
                 onToggle={() => setOpenNo(openNo === s.session_no ? null : s.session_no)}
-                onOpenModule={setModule} />
+                onOpenModule={setModule} opener={openerFor(data?.story ?? null, s.session_no)} />
             ))}
           </ul>
           <ModuleDrawer module={module} onClose={() => setModule(null)} />

@@ -3,6 +3,8 @@ import type {
   ModuleType, SessionKind, WorkshopFormat, WsCurriculumTemplate, WsModule, WsTemplateModule,
 } from './types';
 
+import { normalizeStory, type TemplateStory } from './story';
+
 export type TemplateWithModules = WsCurriculumTemplate & {
   modules: (WsTemplateModule & { module: WsModule })[];
 };
@@ -35,6 +37,13 @@ export async function listTemplates(): Promise<WsCurriculumTemplate[]> {
     .eq('is_archived', false).order('is_default', { ascending: false }).order('title');
   if (error) throw error;
   return data as WsCurriculumTemplate[];
+}
+
+/** The template's story frame and openers (null when the template has none). */
+export async function getTemplateStory(templateId: string): Promise<TemplateStory | null> {
+  const { data, error } = await sb.from('ws_curriculum_templates').select('story').eq('id', templateId).maybeSingle();
+  if (error) throw error;
+  return normalizeStory((data as { story?: unknown } | null)?.story);
 }
 
 export async function getTemplate(id: string): Promise<TemplateWithModules> {

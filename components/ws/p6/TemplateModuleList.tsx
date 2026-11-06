@@ -4,6 +4,8 @@ import { useState, type DragEvent } from 'react';
 import {
   balanceOf, dropBeforeId, type Balance, type BoardItem, type Column,
 } from './board';
+import { OpenerBox } from '@/components/ws/StoryParts';
+import { openerFor, type TemplateStory } from '@/lib/ws/story';
 import type { TemplateRow } from './useTemplateBoard';
 import { typeLabel } from './labels';
 import styles from './board.module.css';
@@ -19,6 +21,8 @@ interface Props {
   onRemove: (id: string) => void;
   onAdd: (sessionNo: number) => void;
   onAddSession: () => void;
+  /** read-only story openers (0022), one box at the top of each session */
+  story?: TemplateStory | null;
 }
 
 interface Hover { session: number; beforeId: string | null }
@@ -30,7 +34,7 @@ const SUM_CLASS: Record<Balance, string> = { under: '', ok: styles.sumOk, over: 
 const METER_CLASS: Record<Balance, string> = { under: '', ok: styles.meterOk, over: styles.meterOver };
 
 /** Sessions as columns (RTL: session 1 is rightmost). HTML5 drag within and across columns. */
-export function TemplateModuleList({ columns, rows, items, target, canEdit, onMove, onRemove, onAdd, onAddSession }: Props) {
+export function TemplateModuleList({ columns, rows, items, target, canEdit, onMove, onRemove, onAdd, onAddSession, story = null }: Props) {
   const [dragging, setDragging] = useState<string | null>(null);
   const [hover, setHover] = useState<Hover | null>(null);
   const minutesOf = new Map(items.map((i) => [i.id, i.minutes]));
@@ -65,6 +69,7 @@ export function TemplateModuleList({ columns, rows, items, target, canEdit, onMo
           const sum = col.ids.reduce((s, id) => s + (minutesOf.get(id) ?? 0), 0);
           const balance = balanceOf(sum, target);
           const isOver = hover?.session === col.session_no;
+          const opener = openerFor(story, col.session_no);
           return (
             <section key={col.session_no} className={`${styles.column} ${isOver ? styles.columnOver : ''}`}
               aria-label={`מפגש ${col.session_no}`}
@@ -80,6 +85,7 @@ export function TemplateModuleList({ columns, rows, items, target, canEdit, onMo
                 <div className={`${styles.meterFill} ${METER_CLASS[balance]}`}
                   style={{ width: `${Math.min(100, target > 0 ? (sum / target) * 100 : 0)}%` }} />
               </div>
+              {opener ? <div className={styles.colOpener}><OpenerBox session={opener} /></div> : null}
               <div className={styles.colBody}>
                 {col.ids.map((id, i) => {
                   const row = rows.get(id);
