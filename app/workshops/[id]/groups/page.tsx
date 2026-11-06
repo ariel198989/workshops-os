@@ -9,6 +9,7 @@ import { toast } from '@/lib/store';
 import { STUDENT_URL } from '@/lib/student-app';
 import { entryCards } from '@/lib/ws/entry-cards';
 import { activateGroups, rotateGroupPin, rotateJoinToken, updateGroup } from '@/lib/ws/groups';
+import { mergeHref } from '@/lib/ws/model-scope';
 import { normalizePoolScope } from '@/lib/ws/pool-scope';
 import type { GroupPatch } from '@/lib/ws/types';
 import { CreateGroupsForm } from '@/components/ws/p4/CreateGroupsForm';
@@ -158,6 +159,7 @@ export default function GroupsPage() {
                   return (
                     <GroupCard key={g.group_id} group={g} members={byGroup.get(g.group_id) ?? []} subproblems={board.subproblems}
                       allGroups={groups} canEdit={canEdit} access={access} poolScope={poolScope}
+                      mergeHref={canEdit ? mergeHref(STUDENT_URL, id, g, poolScope) : null}
                       onMove={(pid, gid) => void board.move(pid, gid)} onPatch={patchGroup} />
                   );
                 })}

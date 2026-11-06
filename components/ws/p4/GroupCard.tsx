@@ -31,6 +31,8 @@ interface GroupCardProps {
   access?: GroupAccessActions;
   /** workshop pool scope (0016): a personal pool labels the photo count as the sum over every student */
   poolScope?: PoolScope;
+  /** student-app merge page (personal pools with tagged photos, editors only); null hides the button */
+  mergeHref?: string | null;
   onMove: (participantId: string, groupId: string | null) => void;
   onPatch: (groupId: string, patch: GroupPatch) => Promise<void>;
 }
@@ -53,7 +55,7 @@ function SubproblemLine({ group, subproblems, editable, onPatch }: {
 }
 
 export function GroupCard({
-  group, members, subproblems, allGroups, canEdit, projector = false, access, poolScope = DEFAULT_POOL_SCOPE, onMove, onPatch,
+  group, members, subproblems, allGroups, canEdit, projector = false, access, poolScope = DEFAULT_POOL_SCOPE, mergeHref = null, onMove, onPatch,
 }: GroupCardProps) {
   const [over, setOver] = useState(false);
   const editable = canEdit && !projector;
@@ -105,6 +107,11 @@ export function GroupCard({
       <ReadinessBar coverage={group.coverage} readiness={group.readiness} />
       <CoverageList offTarget={group.off_target_classes} />
       <StatusLines group={group} />
+      {mergeHref && editable ? (
+        <a href={mergeHref} target="_blank" rel="noopener noreferrer" className={styles.colab}>
+          מיזוג לתמונות הקבוצה ואימון מודל קבוצתי
+        </a>
+      ) : null}
 
       <div>
         <p className={styles.people}>{members.length} חברים, {linked} מחוברים לאפליקציית התלמידים</p>

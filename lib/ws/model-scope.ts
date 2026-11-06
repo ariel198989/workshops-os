@@ -32,3 +32,11 @@ export function jobScope(
   return member ? 'personal' : 'group';
 }
 
+/** Student-app page where the facilitator merges every member's photos and trains one group model. */
+export function mergeHref(
+  studentUrl: string, workshopId: string, group: { group_id: string; tagged: number }, poolScope: PoolScope,
+): string | null {
+  if (poolScope !== 'personal' || group.tagged <= 0) return null;
+  const q = new URLSearchParams({ w: workshopId, g: group.group_id });
+  return `${studentUrl}/facilitator/merge?${q.toString()}`;
+}
